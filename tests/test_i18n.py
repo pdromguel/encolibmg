@@ -165,3 +165,18 @@ def test_no_portuguese_left_in_the_web_ui():
                     and "Você" not in code:
                 found.append(f"{path.name}:{n}: {line.strip()[:70]}")
     assert not found, "\n".join(found)
+
+
+def test_auto_follows_windows_language(monkeypatch):
+    from encolibmg.webui.api import Api
+
+    class S:
+        def set_roots(self, r):
+            pass
+
+    monkeypatch.setattr(i18n, "detect_language", lambda: "en")  # e.g. an English Windows (like the CI runners)
+    a = Api(S(), None)
+    assert i18n.language() == "en"
+    assert a.tracks()["error"] == "Open or create a library first."
+    monkeypatch.setattr(i18n, "detect_language", lambda: "pt-BR")
+    assert a.set_language("auto")["data"]["lang"] == "pt-BR"
