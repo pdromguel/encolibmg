@@ -24,4 +24,4 @@ First public release.
 - Pixel-art interface (pywebview + lit-html) and the "Sung line" brand.
 - Tests: fast suite, `-m slow` (real models), `-m ui` (real window); CI on GitHub Actions.
 
-[0.9.0]: https://github.com/OWNER/encolibmg/releases/tag/v0.9.0
+[0.9.0]: https://github.com/pdromguel/encolibmg/releases/tag/v0.9.0

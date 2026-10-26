@@ -10,7 +10,7 @@ from encolibmg import __version__
 
 API = "https://lrclib.net/api/search"
 HEADERS = {
-    "User-Agent": f"EncoLibMG/{__version__} (https://github.com/Encore-Karaoke-Labs/Encore-Karaoke)"
+    "User-Agent": f"EncoLibMG/{__version__} (https://github.com/pdromguel/encolibmg)"
 }
 
 
