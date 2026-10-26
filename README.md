@@ -127,4 +127,8 @@ EncoLibMG is free software under the [GPL-3.0](LICENSE). Third-party licenses ar
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Note: the MMS alignment model (Meta), downloaded the first
 time a guide is built, is **CC BY-NC 4.0**, for non-commercial use only.
 
-For personal use. You are responsible for the content you download.
+## Disclaimer
+EncoLibMG is a tool for organizing **your own personal karaoke library**. It does not host or distribute any
+music, lyrics or videos. Downloading copyrighted content may not be allowed where you live or by the terms of the
+sites involved: you are responsible for what you download and how you use it. EncoLibMG is not affiliated with
+Encore Karaoke, LRCLIB or YouTube.

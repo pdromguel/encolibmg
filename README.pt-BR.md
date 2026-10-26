@@ -127,4 +127,8 @@ EncoLibMG é software livre sob a [GPL-3.0](LICENSE). As licenças dos component
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Atenção: o modelo de alinhamento MMS (Meta), baixado na
 primeira geração de guia, é **CC BY-NC 4.0**, só para uso não comercial.
 
-Uso pessoal. O conteúdo que você baixar é de sua responsabilidade.
+## Aviso
+O EncoLibMG é uma ferramenta para organizar a **sua biblioteca pessoal de karaokê**. Ele não hospeda nem
+distribui músicas, letras ou vídeos. Baixar conteúdo protegido por direitos autorais pode não ser permitido onde
+você mora ou pelos termos dos sites envolvidos: o que você baixa e como usa é responsabilidade sua. O EncoLibMG
+não tem vínculo com o Encore Karaoke, o LRCLIB ou o YouTube.

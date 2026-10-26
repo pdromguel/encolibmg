@@ -1,0 +1,14 @@
+name: Idea / Sugestão
+description: A feature or improvement. / Uma função nova ou melhoria.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would it help with? / Para que serviria?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / Sua ideia

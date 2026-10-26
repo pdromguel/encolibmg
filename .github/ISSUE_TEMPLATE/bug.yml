@@ -1,0 +1,36 @@
+name: Bug / Problema
+description: Something doesn't work as expected. / Algo não funciona como deveria.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / O que aconteceu?
+      description: What you did, what you expected and what you got. / O que você fez, o que esperava e o que aconteceu.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Como reproduzir
+      placeholder: |
+        1. Open Library…
+        2. Click …
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        The relevant part of `%APPDATA%\EncoLibMG\log.txt`. Remove anything private first.
+        A parte relevante do `%APPDATA%\EncoLibMG\log.txt`. Tire antes qualquer dado pessoal.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version / Versão
+      placeholder: "0.9.0"
+  - type: input
+    id: system
+    attributes:
+      label: Windows, GPU
+      placeholder: "Windows 11, RTX 3060 (or CPU only)"
