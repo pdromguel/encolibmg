@@ -156,3 +156,31 @@ def test_open_folder_only_opens_folders_inside_library(api, monkeypatch):
     assert api.open_folder("../..")["kind"] == "ValueError"
     assert api.open_folder("C:/Windows")["kind"] == "ValueError"
     assert [p.name for p in map(__import__("pathlib").Path, opened)] == ["EncoreLibrary", "BGV"]
+
+
+def test_every_method_the_ui_calls_exists():
+    """The JS calls the bridge by name; after splitting the API into areas none may go missing."""
+    import re
+    from pathlib import Path
+
+    js = Path(__file__).resolve().parent.parent / "encolibmg" / "webui" / "static" / "js"
+    called = set()
+    for f in js.rglob("*.js"):
+        called |= set(re.findall(r"""\b(?:call|tryCall|runJob)\(\s*["'](\w+)["']""", f.read_text(encoding="utf-8")))
+    assert len(called) > 30
+    missing = sorted(n for n in called if not callable(getattr(Api, n, None)) or n.startswith("_"))
+    assert not missing, missing
+
+
+def test_waveform_cache_keeps_only_recent_tracks(api, tmp_path, monkeypatch):
+    from encolibmg.webui.api import sync
+
+    monkeypatch.setattr(sync, "waveform", lambda path, channel: {"peaks": [0.5], "path": str(path)})
+    files = []
+    for n in range(sync.PEAK_CACHE + 3):
+        f = tmp_path / f"{n}.mp3"
+        f.write_bytes(b"x")
+        files.append(f)
+        api._peaks_for(f, 1)
+    assert len(api._peaks) == sync.PEAK_CACHE
+    assert f"{files[0]}:1" not in api._peaks and f"{files[-1]}:1" in api._peaks

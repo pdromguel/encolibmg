@@ -7,7 +7,7 @@ let seed = 1;
 
 /** Covers the content area with blocks in random order, runs `swap`, then reveals in another order. */
 export function pixelWipe(swap) {
-  if (reducedMotion()) { swap(); return Promise.resolve(); }
+  if (reducedMotion() || document.hidden) { swap(); return Promise.resolve(); }
   const canvas = document.createElement("canvas");
   canvas.className = "wipe";
   document.body.appendChild(canvas);
@@ -20,8 +20,18 @@ export function pixelWipe(swap) {
   const cover = 150, reveal = 190;
   return new Promise(resolve => {
     const t0 = performance.now();
-    let swapped = false;
+    let swapped = false, done = false;
+    // the browser pauses animation frames while the window is covered or minimized: never leave a route half-done
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (!swapped) { swapped = true; swap(); }
+      canvas.remove();
+      resolve();
+    };
+    setTimeout(finish, cover + reveal + 250);
     const frame = now => {
+      if (done) return;
       const t = now - t0;
       ctx.clearRect(0, 0, r.width, r.height);
       if (t < cover) {
@@ -39,7 +49,7 @@ export function pixelWipe(swap) {
           ctx.fillStyle = i < k + n * .06 ? P["field-dim"] : P["bg"];
           ctx.fillRect(x * C, y * C, C, C);
         }
-        if (t >= cover + reveal) { canvas.remove(); resolve(); return; }
+        if (t >= cover + reveal) { finish(); return; }
       }
       requestAnimationFrame(frame);
     };

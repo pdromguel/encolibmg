@@ -35,10 +35,16 @@ export function view(name, init = {}) {
 export function schedule() {
   if (scheduled) return;
   scheduled = true;
-  requestAnimationFrame(() => {
+  // next frame; the timer covers a hidden or covered window, where the browser pauses animation frames
+  let timer = 0;
+  const flush = () => {
+    if (!scheduled) return;
     scheduled = false;
+    clearTimeout(timer);
     for (const fn of subs) fn(state);
-  });
+  };
+  requestAnimationFrame(flush);
+  timer = setTimeout(flush, 120);
 }
 
 export function subscribe(fn) {

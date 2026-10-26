@@ -110,6 +110,7 @@ is generated from pixel grids by [scripts/brand.py](scripts/brand.py). The ident
 ```
 .venv\Scripts\python -m pytest            # fast tests (includes the JS ones when Node is installed)
 .venv\Scripts\python -m pytest -m slow    # also runs the real Demucs and CREPE
+.venv\Scripts\python -m pytest -m ui      # opens the real window and runs the main flows
 .venv\Scripts\python -m encolibmg --debug # opens the window with the developer tools
 ```
 - **Layout:** Python engine in `encolibmg/`; interface in `encolibmg/webui/` (pywebview + lit-html, no build

@@ -110,6 +110,7 @@ Marca **"Letra cantada"**: uma linha de karaokê no meio do preenchimento, entre
 ```
 .venv\Scripts\python -m pytest            # testes rápidos (inclui os de JS, se o Node estiver instalado)
 .venv\Scripts\python -m pytest -m slow    # inclui Demucs e CREPE de verdade
+.venv\Scripts\python -m pytest -m ui      # abre a janela de verdade e roda os fluxos principais
 .venv\Scripts\python -m encolibmg --debug # abre a janela com as ferramentas de desenvolvedor
 ```
 - **Estrutura:** motor em Python (`encolibmg/`); interface em `encolibmg/webui/` (pywebview + lit-html, sem

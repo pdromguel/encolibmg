@@ -81,3 +81,15 @@ def test_decode_real_file(tmp_path):
     data = decode(f)
     assert data.shape[1] == 2
     assert len(data) / SR == pytest.approx(1.0, abs=0.1)
+
+
+def test_decode_mono_picks_channel(tmp_path):
+    from encolibmg.audio.decode import decode_mono
+
+    f = tmp_path / "lr.wav"  # left silent, right a tone (like a Multiplex: L instrumental, R vocals)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono:d=1",
+                    "-f", "lavfi", "-i", "sine=d=1", "-filter_complex", "[0:a][1:a]amerge=inputs=2", str(f)], check=True)
+    left, right, both = decode_mono(f, 0), decode_mono(f, 1), decode_mono(f, -1)
+    assert len(right) == pytest.approx(8000, abs=200)
+    assert abs(left).max() < 1e-3 < abs(right).max()
+    assert 0 < abs(both).max() < abs(right).max() + 1e-6

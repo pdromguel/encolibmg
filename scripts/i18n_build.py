@@ -27,7 +27,7 @@ def main():
     for i, lang in enumerate(("pt-BR", "en"), start=1):
         data = {row[0]: row[i] for row in rows}
         (OUT / f"{lang}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
-                                          encoding="utf-8")
+                                          encoding="utf-8", newline="\n")  # LF on every OS (CI compares)
     print(f"{len(rows)} strings -> {OUT}")
 
 
