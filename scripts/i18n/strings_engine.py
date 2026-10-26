@@ -164,4 +164,12 @@ ENGINE = [
      "(go.microsoft.com/fwlink/p/?LinkId=2124703) e tente de novo.\n\nDetalhes: {detail}",
      "Could not open the EncoLibMG window.\n\nInstall the Microsoft Edge WebView2 Runtime "
      "(go.microsoft.com/fwlink/p/?LinkId=2124703) and try again.\n\nDetails: {detail}"),
+    ("err.queue_busy_item", "Essa música está sendo baixada ou processada agora: pause a fila antes de removê-la.",
+     "This song is being downloaded or processed right now: pause the queue before removing it."),
+    ("err.csv_columns", "Não achei a coluna do nome da música nesse CSV. Use um CSV do Exportify (Spotify) ou com colunas artista e título.",
+     "I couldn't find the song name column in this CSV. Use a CSV from Exportify (Spotify) or one with artist and title columns."),
+    ("err.playlist_empty", "Essa playlist está vazia ou não pôde ser lida (é pública?).",
+     "This playlist is empty or couldn't be read (is it public?)."),
+    ("job.queue", "Fila de downloads", "Download queue"),
+    ("dialog.csv", "Planilhas CSV", "CSV spreadsheets"),
 ]

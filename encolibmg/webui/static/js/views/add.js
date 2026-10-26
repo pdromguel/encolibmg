@@ -1,15 +1,16 @@
-// Add: search synced lyrics → download complete track (Multiplex + LRC + guide) or a karaoke MTV.
+// Add: search synced lyrics → queue complete tracks (Multiplex + LRC + guide), add lists, or a karaoke MTV.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob, tryCall } from "../api.js";
-import { go, refresh } from "../app.js";
+import { refresh } from "../app.js";
 import { fmtTime } from "../fx/core.js";
 import { confetti } from "../fx/effects.js";
-import { setView, state, view } from "../store.js";
+import { setView, view } from "../store.js";
 import { modal } from "../ui/dialogs.js";
 import { toast } from "../ui/toast.js";
 import { t } from "../i18n.js";
 import { noLibrary, pageHead } from "./common.js";
+import { addListDialog, addToQueue } from "./queue.js";
 
 const STEPS = () => [
   [t("ui.add.step.lyrics"), "LRCLIB"], [t("ui.add.step.audio"), "YouTube"], [t("ui.add.step.voice"), "Demucs"],
@@ -21,11 +22,11 @@ const STEP_OF = {
   "step.read_audio": 4, "step.analyze_melody": 4, "step.align_lyrics": 4, "step.save_guide": 4,
 };
 function stepIndex(job) {
-  if (!job || job.kind !== "add") return -1;
+  if (!job || (job.kind !== "add" && job.kind !== "queue")) return -1;
   return STEP_OF[job.key] ?? 0;
 }
 
-const v = () => view("add", { query: "", results: null, loading: false, guide: true });
+const v = () => view("add", { query: "", results: null, loading: false, guide: true, picked: [] });
 
 async function search(q) {
   q = (q ?? v().query).trim();
@@ -33,36 +34,24 @@ async function search(q) {
   setView("add", { query: q, loading: true, autorun: false });
   try {
     const results = await call("search_lyrics", q);
-    setView("add", { results, loading: false });
+    setView("add", { results, loading: false, picked: [] });
   } catch (e) {
     setView("add", { loading: false });
     toast(e.message, { kind: "bad", detail: t("ui.add.search_failed") });
   }
 }
 
-async function download(r, ev) {
-  if (state.job) return toast(t("ui.add.wait_job"), { kind: "warn" });
-  const origin = ev?.currentTarget?.getBoundingClientRect?.();
-  try {
-    const track = await runJob("add_song", r.id, v().guide);
-    await refresh();
-    confetti(origin ? origin.left + origin.width / 2 : innerWidth / 2, origin ? origin.top : innerHeight / 2);
-    toast(t("ui.add.done", { title: track.title }), {
-      kind: "ok", detail: track.label,
-      actions: [
-        { label: t("ui.add.see_in_library"), primary: true, run: () => { setView("library", { selected: track.base }); go("library"); } },
-        ...(track.has_guide ? [{ label: t("ui.add.guide_preview"), run: () => go("guide", track.base) }] : []),
-      ],
-    });
-  } catch (e) {
-    if (e.kind === "Cancelled") return;
-    if (e.kind === "NoAudioMatch") {
-      toast(e.message, { kind: "warn", detail: t("ui.add.want_mtv"),
-        actions: [{ label: t("ui.add.find_mtv"), primary: true, run: () => findMtv(r.artist, r.title) }] });
-    } else if (e.kind === "AlreadyExists") toast(e.message, { kind: "info" });
-    else toast(e.message, { kind: "bad" });
-  }
+// every download goes through the queue: it waits for other jobs and the next one downloads during the GPU work
+async function enqueue(ids) {
+  if (!ids.length) return;
+  const res = await addToQueue("queue_add_results", ids, v().guide);
+  if (res) setView("add", { picked: [] });
 }
+
+const togglePick = (id, on) => {
+  const p = v().picked;
+  setView("add", { picked: on ? [...p, id] : p.filter(x => x !== id) });
+};
 
 /* ---------------------------------------------------------- video picker --- */
 export async function pickVideo(title, lead, loader) {
@@ -94,7 +83,7 @@ export async function pickVideo(title, lead, loader) {
   }, { wide: true });
 }
 
-async function findMtv(artist, title) {
+export async function findMtv(artist, title) {
   if (!artist || !title) {
     const q = v().query;
     if (!q.includes(" - ")) return toast(t("ui.add.need_artist_title"), { kind: "warn" });
@@ -124,7 +113,8 @@ export const add = {
     if (!st.app?.library) return html`<div class="page">${pageHead(t("ui.nav.add"), "")}${noLibrary()}</div>`;
     const s = v(), active = stepIndex(st.job);
     return html`<div class="page add">
-      ${pageHead(t("ui.nav.add"), t("ui.add.sub"))}
+      ${pageHead(t("ui.nav.add"), t("ui.add.sub"),
+        html`<button class="btn ghost" @click=${addListDialog}>${icon("list")} ${t("ui.queue.add_list")}</button>`)}
       <form class="searchbar rise" style="--i:1" @submit=${e => { e.preventDefault(); search(); }}>
         <input class="field big" data-search placeholder=${t("ui.add.placeholder")} .value=${s.query} autocomplete="off" spellcheck="false"
                @input=${e => setView("add", { query: e.target.value })}>
@@ -146,14 +136,21 @@ export const add = {
         <div class="empty rise"><h3>${t("ui.add.none_title")}</h3><p>${t("ui.add.none_text")}</p>
           <button class="btn ghost" @click=${() => findMtv()}>${icon("film")} ${t("ui.add.find_mtv_long")}</button></div>`
       : html`
+        ${s.picked.length ? html`<div class="bulk rise">
+          <button class="btn sm" @click=${() => enqueue(s.picked)}>${icon("down")} ${t("ui.add.add_n", { count: s.picked.length })}</button>
+          <span class="grow"></span>
+          <button class="btn quiet sm" @click=${() => setView("add", { picked: [] })}>${t("ui.lib.clear")}</button>
+        </div>` : ""}
         <div class="results">
-          ${s.results.map((r, i) => html`<div class="res rise ${r.synced ? "" : "nosync"}" style="--i:${Math.min(i, 12)}"
-              @dblclick=${e => r.synced && download(r, e)}>
-            <span class="sync ${r.synced ? "ok" : "muted"}" title=${t(r.synced ? "ui.add.synced" : "ui.add.plain")}>${r.synced ? "✓" : "–"}</span>
+          ${s.results.map((r, i) => html`<div class="res rise ${r.synced ? "" : "nosync"} ${s.picked.includes(r.id) ? "checked" : ""}"
+              style="--i:${Math.min(i, 12)}" @dblclick=${() => r.synced && enqueue([r.id])}>
+            ${r.synced ? html`<label class="check sync" title=${t("ui.add.pick")}><input type="checkbox"
+                .checked=${s.picked.includes(r.id)} @change=${e => togglePick(r.id, e.target.checked)}></label>`
+              : html`<span class="sync muted" title=${t("ui.add.plain")}>–</span>`}
             <div class="grow"><div class="t ellipsis">${r.title}</div><div class="a ellipsis">${r.artist}${r.album ? html` <span class="muted">· ${r.album}</span>` : ""}</div></div>
             <span class="dur mono-num">${fmtTime(r.duration)}</span>
             <div class="acts">
-              ${r.synced ? html`<button class="btn sm" ?disabled=${!!st.job} @click=${e => download(r, e)}>${icon("down")} ${t("ui.add.download_full")}</button>`
+              ${r.synced ? html`<button class="btn sm" @click=${() => enqueue([r.id])}>${icon("down")} ${t("ui.add.download_full")}</button>`
                          : html`<button class="btn sm ghost" @click=${() => findMtv(r.artist, r.title)}>${icon("film")} MTV</button>`}
             </div>
           </div>`)}

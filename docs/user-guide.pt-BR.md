@@ -20,10 +20,24 @@ O logo em pixels, a busca e os números da biblioteca. Digite `Artista - Música
 ### Adicionar
 ![Adicionar](screens/pt-BR/add.png)
 
-Escolha a versão da letra com ✓ e clique em **Baixar completa**. O app procura o áudio com a mesma duração da
-letra (para ela bater), separa a voz do instrumental na sua GPU, monta o Multiplex e gera o guia MIDI. As cinco
-etapas acendem conforme avança; o rodapé mostra o progresso e um botão Cancelar.
+Escolha a versão da letra e clique em **Baixar completa**, ou marque várias e clique em **Adicionar N à fila**. Para
+cada música o app procura o áudio com a mesma duração da letra (para ela bater), separa a voz do instrumental na sua
+GPU, monta o Multiplex e gera o guia MIDI. As cinco etapas acendem conforme avança.
 Sem letra sincronizada? **Buscar um vídeo de karaokê (MTV)** abre um seletor com miniaturas do YouTube.
+
+### Fila de downloads
+Toda música adicionada entra na **fila**: o botão **Fila** no rodapé abre ela. Enquanto a GPU trabalha numa música,
+a próxima já está baixando.
+- **Adicionar lista…** (na tela Adicionar ou na fila) aceita uma lista colada (um `Artista - Música` por linha), o
+  link de uma **playlist pública do YouTube** ou uma **playlist do Spotify** exportada em CSV com o
+  [Exportify](https://exportify.net) (qualquer CSV com colunas de artista e título também serve). A letra
+  sincronizada é escolhida sozinha, só quando artista, título (e duração, no Spotify) batem de verdade.
+- Cada música mostra onde está: na fila, procurando a letra, baixando, esperando a GPU, processando, pronta.
+- As que **falharam** dizem o motivo. Sem letra sincronizada, **MTV** busca um vídeo de karaokê no lugar; **Tentar de
+  novo** volta a música para a fila.
+- **Pausar** (ou Cancelar no rodapé) para e guarda o que já foi baixado. Adicionar músicas faz a fila andar de novo.
+- A fila fica salva: feche o app e ela continua lá na próxima vez, **pausada** até você clicar em **Continuar**.
+- Quando acaba, um resumo diz quantas entraram com guia, sem guia, quantas já existiam e quantas falharam.
 
 ### Biblioteca
 ![Biblioteca](screens/pt-BR/library.png)

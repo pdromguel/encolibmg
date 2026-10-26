@@ -80,7 +80,7 @@ pouco, conforme a sua internet):
   </tr>
   <tr>
     <td><img src="screens/pt-BR/check.png" alt="Verificar"><br><b>Verificar</b>: acha o que o Encore ignoraria e corrige com um clique.</td>
-    <td><img src="screens/pt-BR/home.png" alt="Início"><br><b>E mais</b>: importa CDs, pacotes CDG e .kar; vídeos de fundo, abertura, narração da nota, SoundFont.</td>
+    <td><img src="screens/pt-BR/home.png" alt="Início"><br><b>E mais</b>: fila de downloads para listas inteiras (colar, playlist do YouTube, CSV do Spotify); importa CDs, pacotes CDG e .kar; vídeos de fundo, abertura, narração da nota, SoundFont.</td>
   </tr>
 </table>
 

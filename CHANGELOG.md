@@ -5,6 +5,11 @@ All notable changes to EncoLibMG. Versions follow [Semantic Versioning](https://
 ## [Unreleased]
 
 ### Added
+- **Download queue**: tick several search results or add a whole list (pasted text, a public YouTube playlist, a
+  Spotify playlist exported with Exportify, or any artist/title CSV). Lyrics are picked automatically only when
+  artist, title (and length) really match. The next song downloads while the GPU works on the current one; the queue
+  is saved between sessions (reopening starts it paused); failed songs say why and offer MTV or Try again; a summary
+  at the end. The footer's Cancel pauses the queue.
 - **Hardware** section in the README: measured times per song with and without an NVIDIA card, minimum and
   recommended PC, what to expect. `scripts/benchmark.py` measures your own PC.
 

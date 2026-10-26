@@ -90,3 +90,38 @@ def test_search_splits_artist_title_query():
     lrclib.search("Adele - Hello", session=s)
     assert s.calls[0][1] == {"track_name": "Hello", "artist_name": "Adele"}
     assert s.calls[1][1] == {"q": "Adele Hello"}  # fuzzy fallback when nothing found
+
+
+def _cand(i, artist, title, duration=200.0, synced=True):
+    from encolibmg.lyrics.lrclib import LyricsCandidate
+
+    return LyricsCandidate(i, artist, title, "", duration, "[00:01.00] la\n" if synced else None, None)
+
+
+def test_find_by_name_needs_a_real_match():
+    from encolibmg.lyrics.match import find_by_name
+
+    cands = [_cand(1, "Someone Else", "Paper Lanterns"),          # wrong artist
+             _cand(2, "Neon Harbor", "Paper Lanterns", synced=False),
+             _cand(3, "Neon Harbor", "Paper Lanterns (Live)"),
+             _cand(4, "Neon Harbor", "Paper Lanterns")]
+    pick = find_by_name("Neon Harbor", "Paper Lanterns", search=lambda q: cands)
+    assert pick.id == 4  # synced, right artist, not the live version
+    assert find_by_name("Neon Harbor", "Late Train Home", search=lambda q: cands) is None
+
+
+def test_find_by_name_live_when_asked_and_duration():
+    from encolibmg.lyrics.match import find_by_name
+
+    cands = [_cand(3, "Neon Harbor", "Paper Lanterns (Live)", 260.0), _cand(4, "Neon Harbor", "Paper Lanterns", 200.0)]
+    assert find_by_name("Neon Harbor", "Paper Lanterns (Live)", search=lambda q: cands).id == 3
+    assert find_by_name("Neon Harbor", "Paper Lanterns", duration=259.0, search=lambda q: cands).id == 3
+    assert find_by_name("Neon Harbor", "Paper Lanterns", duration=120.0, search=lambda q: cands) is None
+
+
+def test_find_by_name_without_artist_and_with_accents():
+    from encolibmg.lyrics.match import find_by_name
+
+    cands = [_cand(5, "Sol de Março", "Cidade Azul"), _cand(6, "Sol de Março & Convidado", "Cidade Azul - Remastered")]
+    assert find_by_name("", "Cidade Azul", search=lambda q: cands).id == 5
+    assert find_by_name("sol de marco", "cidade azul", search=lambda q: cands).id == 5

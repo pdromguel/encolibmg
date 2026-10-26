@@ -11,6 +11,7 @@ import logging
 import shutil
 import tempfile
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Event
 from typing import Callable
@@ -86,9 +87,19 @@ def _with_guide(lib: Library, track: Track, make_guide: bool, on_progress: Progr
     return track
 
 
-def add_song(lib: Library, lyr: LyricsCandidate, on_progress: Progress = _noop,
-             cancel: Event | None = None, make_guide: bool = True) -> Track:
-    """Multiplex MP3 (L instrumental / R vocals) + normalized LRC."""
+@dataclass
+class Prepared:
+    """A song whose audio is downloaded and waiting for the GPU (the queue keeps these between the two steps)."""
+    base: str
+    artist: str
+    title: str
+    lrc_text: str
+    wav: Path
+
+
+def prepare_song(lib: Library, lyr: LyricsCandidate, workdir: Path, on_progress: Progress = _noop,
+                 cancel: Event | None = None) -> Prepared:
+    """Network part: checks, finds the audio with the lyrics' length and downloads it into `workdir`."""
     base = base_name(lyr.artist, lyr.title)
     if lib.exists(base):
         raise AlreadyExists(t("err.already_exists", base=base))
@@ -100,15 +111,31 @@ def add_song(lib: Library, lyr: LyricsCandidate, on_progress: Progress = _noop,
     video = find_audio(lyr.artist, lyr.title, lyr.duration)
     log.info("audio for %s: %s (%s)", base, video.url, video.duration)
     _check(cancel)
+    on_progress("step.download", 0.0)
+    wav = youtube.download_audio(video.url, workdir, cancel, lambda f: on_progress("step.download", f))
+    _check(cancel)
+    return Prepared(base, lyr.artist, lyr.title, lrc_text, wav)
 
+
+def finish_song(lib: Library, prep: Prepared, on_progress: Progress = _noop, cancel: Event | None = None,
+                make_guide: bool = True) -> Track:
+    """GPU part: vocal split, Multiplex + LRC into the library, then the guide."""
+    if lib.exists(prep.base):  # added by hand while it waited in the queue
+        raise AlreadyExists(t("err.already_exists", base=prep.base))
     with _workdir(lib) as tmp:
-        on_progress("step.download", 0.0)
-        wav = youtube.download_audio(video.url, tmp, cancel, lambda f: on_progress("step.download", f))
-        _check(cancel)
-        files = _build_multiplex(tmp, wav, base, lyr.artist, lyr.title, lrc_text, on_progress, cancel)
+        files = _build_multiplex(tmp, prep.wav, prep.base, prep.artist, prep.title, prep.lrc_text,
+                                 on_progress, cancel)
         on_progress("step.save", None)
-        track = _finish(lib, files, base)
+        track = _finish(lib, files, prep.base)
     return _with_guide(lib, track, make_guide, on_progress, cancel)
+
+
+def add_song(lib: Library, lyr: LyricsCandidate, on_progress: Progress = _noop,
+             cancel: Event | None = None, make_guide: bool = True) -> Track:
+    """Multiplex MP3 (L instrumental / R vocals) + normalized LRC: both parts in one go."""
+    with tempfile.TemporaryDirectory(prefix="encolibmg-dl-") as dl:
+        prep = prepare_song(lib, lyr, Path(dl), on_progress, cancel)
+        return finish_song(lib, prep, on_progress, cancel, make_guide)
 
 
 def _build_multiplex(tmp: Path, wav: Path, base: str, artist: str, title: str, lrc_text: str,

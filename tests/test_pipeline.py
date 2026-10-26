@@ -156,3 +156,21 @@ def test_add_song_generates_guide_by_default(lib, fakes):
 def test_add_song_without_guide(lib, fakes):
     pipeline.add_song(lib, LYR, make_guide=False)
     assert not any(c[0] == "guide" for c in fakes)
+
+
+def test_prepare_then_finish(lib, fakes, tmp_path):
+    work = tmp_path / "queue-work"
+    work.mkdir()
+    prep = pipeline.prepare_song(lib, LYR, work)
+    assert prep.base == "Adele - Hello" and prep.wav.parent == work and prep.lrc_text == "[00:01.00] Hello\n"
+    assert leftovers(lib) == []  # nothing in the library until the GPU part
+    track = pipeline.finish_song(lib, prep)
+    assert track.kind == "multiplex_lrc"
+    assert sorted(leftovers(lib)) == ["Adele - Hello.lrc", "Adele - Hello.multiplexed.mp3"]
+
+
+def test_finish_refuses_a_song_added_meanwhile(lib, fakes, tmp_path):
+    prep = pipeline.prepare_song(lib, LYR, tmp_path)
+    (lib.path / "Adele - Hello.mp4").write_bytes(b"")  # added by hand while waiting in the queue
+    with pytest.raises(AlreadyExists):
+        pipeline.finish_song(lib, prep)

@@ -55,7 +55,7 @@ def test_resolve_and_detect(monkeypatch):
 
 ACCENTED = re.compile(r"[ãçéêõáíóúâôàÁÉÍÓÚÃÕÇ]")
 # strings that are data, not messages (regex ranges, words matched in titles, normalization tables)
-ALLOWED = {"acústico", "æ", "ø", "ß"}
+ALLOWED = {"acústico", "æ", "ø", "ß", "música", "título"}  # last two: Portuguese CSV column names the import reads
 
 
 def _python_files():
@@ -140,6 +140,8 @@ JS_DYNAMIC = {
     "ui.import.opt.": ["find_lyrics", "make_multiplex", "normalize", "move"],
     "ui.vis.tab.": ["bgv", "bumpers", "boot", "narr", "sf"],
     "ui.check.what.": [f"{n}{d}" for n in range(1, 9) for d in ("", "d")],
+    "ui.queue.state.": ["waiting", "finding", "downloading", "downloaded", "processing", "done", "done_no_guide", "skipped"],
+    "ui.queue.reason.": ["no_lyrics", "no_audio", "error"],
 }
 
 

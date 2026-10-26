@@ -20,10 +20,25 @@ The pixel logo, the search box and your library's numbers. Type `Artist - Song` 
 ### Add
 ![Add](screens/en/add.png)
 
-Pick a lyrics version marked ✓ and click **Download full**. The app looks for audio with the same length as the
-lyrics (so they line up), splits the vocals from the instrumental on your GPU, builds the Multiplex and generates
-the MIDI guide. The five steps light up as it goes; the footer shows the progress and a Cancel button.
+Pick a lyrics version and click **Download full**, or tick several and click **Add N to queue**. For each song the
+app looks for audio with the same length as the lyrics (so they line up), splits the vocals from the instrumental
+on your GPU, builds the Multiplex and generates the MIDI guide. The five steps light up as it goes.
 No synced lyrics? **Find a karaoke video (MTV)** opens a picker with YouTube thumbnails.
+
+### Download queue
+Every song you add goes into the **queue**: the **Queue** button in the footer opens it. While the GPU works on
+one song, the next one is already downloading.
+- **Add a list…** (on the Add screen or in the queue) takes a pasted list (one `Artist - Song` per line), a public
+  **YouTube playlist** link, or a **Spotify playlist** exported as CSV with [Exportify](https://exportify.net)
+  (any CSV with artist and title columns works too). The synced lyrics are picked automatically, only when the
+  artist, title (and length, for Spotify) really match.
+- Each song shows where it is: waiting, finding the lyrics, downloading, waiting for the GPU, processing, ready.
+- **Failed** songs say why. With no synced lyrics, **MTV** finds a karaoke video instead; **Try again** puts the
+  song back in line.
+- **Pause** (or Cancel in the footer) stops and keeps what was already downloaded. Adding songs starts the queue
+  again.
+- The queue is saved: close the app and it is still there next time, **paused** until you press **Resume**.
+- When it runs out, a summary says how many came in with a guide, without one, were already there or failed.
 
 ### Library
 ![Library](screens/en/library.png)

@@ -9,11 +9,12 @@ from encolibmg.webui.api.check import CheckApi
 from encolibmg.webui.api.core import NoLibrary, api
 from encolibmg.webui.api.imports import ImportApi
 from encolibmg.webui.api.library import LibraryApi
+from encolibmg.webui.api.queue import QueueApi
 from encolibmg.webui.api.sync import SyncApi
 from encolibmg.webui.api.visual import VisualApi
 
 
-class Api(LibraryApi, AddApi, SyncApi, CheckApi, ImportApi, VisualApi):
+class Api(LibraryApi, AddApi, QueueApi, SyncApi, CheckApi, ImportApi, VisualApi):
     """The object pywebview exposes to JavaScript."""
 
 

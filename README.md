@@ -78,7 +78,7 @@ little on top, depending on your connection):
   </tr>
   <tr>
     <td><img src="docs/screens/en/check.png" alt="Check"><br><b>Check</b>: finds what Encore would ignore and fixes it in one click.</td>
-    <td><img src="docs/screens/en/home.png" alt="Home"><br><b>And more</b>: import CDs, CDG packs and .kar files; background videos, intro, score narrations, SoundFont.</td>
+    <td><img src="docs/screens/en/home.png" alt="Home"><br><b>And more</b>: a download queue for whole lists (paste, YouTube playlist, Spotify CSV); import CDs, CDG packs and .kar files; background videos, intro, score narrations, SoundFont.</td>
   </tr>
 </table>
 

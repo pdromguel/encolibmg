@@ -184,3 +184,79 @@ def test_waveform_cache_keeps_only_recent_tracks(api, tmp_path, monkeypatch):
         api._peaks_for(f, 1)
     assert len(api._peaks) == sync.PEAK_CACHE
     assert f"{files[0]}:1" not in api._peaks and f"{files[-1]}:1" in api._peaks
+
+
+@pytest.fixture
+def fake_net(monkeypatch):
+    """The queue's network and GPU parts, replaced: a song named "Nowhere" has no lyrics."""
+    from types import SimpleNamespace
+
+    from encolibmg import download_queue, pipeline
+    from encolibmg.lyrics.lrclib import LyricsCandidate
+
+    def find(artist, title, duration=None):
+        return None if title == "Nowhere" else LyricsCandidate(1, artist, title, "", 200.0, "[00:01.00] la\n", None)
+
+    def prepare(lib, c, work, step=None, cancel=None):
+        (work / "source.wav").write_bytes(b"x")
+        return pipeline.Prepared(f"{c.artist} - {c.title}", c.artist, c.title, "[00:01.00] la\n", work / "source.wav")
+
+    monkeypatch.setattr(download_queue, "find_by_name", find)
+    monkeypatch.setattr(pipeline, "prepare_song", prepare)
+    monkeypatch.setattr(pipeline, "finish_song", lambda lib, p, step=None, cancel=None, g=True: SimpleNamespace(has_guide=g))
+
+
+def test_queue_from_a_pasted_list(api, fake_net):
+    res = api.queue_add_text("Neon Harbor - Paper Lanterns\nSomeone - Nowhere\n", True)["data"]
+    assert res["added"] == 2 and res["found"] == 2
+    # SyncJobs runs the queue right away
+    assert api._jobs.results[-1] == {"full": 1, "no_guide": 0, "skipped": 0, "failed": 1}
+    items = api.queue_state()["data"]["items"]
+    assert [(i["title"], i["state"], i["reason"] or i["level"]) for i in items] == [
+        ("Paper Lanterns", "done", "full"), ("Nowhere", "failed", "no_lyrics")]
+    assert api.queue_add_text("Neon Harbor - Paper Lanterns", True)["data"]["added"] == 1  # done → can be added again
+
+
+def test_queue_pause_resume_and_retry(api, fake_net):
+    api.queue_add_text("A - Nowhere", True)  # runs at once (SyncJobs) and fails: no lyrics
+    assert api.queue_state()["data"]["items"][0]["state"] == "failed"
+    assert api.queue_pause()["data"]["paused"]
+    item = api.queue_state()["data"]["items"][0]
+    res = api.queue_retry(item["id"])["data"]
+    assert res["items"][0]["state"] == "waiting" and res["paused"]  # retrying doesn't unpause
+    res = api.queue_resume()["data"]
+    assert not res["paused"] and res["items"][0]["state"] == "failed"
+
+
+def test_adding_songs_resumes_a_paused_queue(api, fake_net):
+    api.queue_pause()
+    res = api.queue_add_text("A - One", False)["data"]
+    assert not res["paused"] and res["items"][0]["state"] == "done" and res["items"][0]["level"] == "no_guide"
+
+
+def test_queue_starts_paused_after_a_restart(api, fake_net, tmp_path):
+    api.queue_pause()
+    api._queue.add(api._lib.path, [{"artist": "A", "title": "Left over"}], "list")  # as if left from last session
+    again = Api(FakeServer(), SyncJobs())
+    res = again.queue_state()["data"]
+    assert res["paused"] and res["items"][0]["state"] == "waiting" and again._jobs.results == []
+
+
+def test_queue_playlist_only_youtube(api):
+    assert api.queue_add_playlist("https://evil.example/playlist?list=x")["kind"] == "ValueError"
+    assert api.queue_add_playlist("http://www.youtube.com/playlist?list=x")["kind"] == "ValueError"
+
+
+def test_queue_is_per_library(api, fake_net, tmp_path):
+    api.queue_pause()
+    api.queue_add_text("A - One", True)
+    other = tmp_path / "other"
+    other.mkdir()
+    api.library_create(str(other), "Other")
+    assert api.queue_state()["data"]["items"] == []
+
+
+def test_cancelling_the_queue_job_pauses_the_queue(api, monkeypatch):
+    monkeypatch.setattr(api, "_queue_running", lambda: True)
+    api.job_cancel()
+    assert api.queue_state()["data"]["paused"]

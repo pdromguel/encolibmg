@@ -9,6 +9,8 @@ export const state = {
   tracks: null,       // cached library list
   job: null,          // {id, label, step, frac, kind}
   player: null,       // {base, title, url, playing, ...}
+  queue: null,        // {items, running, paused} for the open library
+  queueOpen: false,   // the queue panel above the footer
   view: {},           // per-screen state, keyed by screen name
 };
 

@@ -79,10 +79,6 @@ class LibraryApi(ApiCore):
         return True
 
     @api
-    def job_cancel(self):
-        return self._jobs.cancel()
-
-    @api
     def open_url(self, url: str):
         """Opens YouTube links in the system browser (nothing else is allowed)."""
         import webbrowser

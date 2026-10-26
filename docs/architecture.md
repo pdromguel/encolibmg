@@ -19,7 +19,9 @@ flowchart LR
 ```
 encolibmg/
 ├── __main__.py        starts the window (python -m encolibmg)
-├── pipeline.py        "add a song": lyrics → audio → vocals → Multiplex → guide
+├── pipeline.py        "add a song": prepare_song (lyrics → audio download) + finish_song (vocals → Multiplex → guide)
+├── download_queue.py  the queue: saved to queue.json; one thread downloads ahead while the job thread does the GPU part
+├── queue_sources.py   pasted lists, YouTube playlists and Spotify/other CSVs → "artist + title" entries
 ├── youtube.py         search and download with yt-dlp
 ├── core/              basics every part uses
 │   ├── paths.py       config, log and backup folders (%APPDATA%\EncoLibMG)
@@ -44,7 +46,7 @@ encolibmg/
     ├── server.py      local HTTP server: the page and /media (only files inside the library)
     ├── jobs.py        runs long work in the background and reports progress
     ├── serialize.py   turns engine objects into plain dicts for the page
-    ├── api/           methods the page calls, one module per screen (library, add, sync, check, …)
+    ├── api/           methods the page calls, one module per screen (library, add, queue, sync, check, …)
     └── static/        the page: index.html, css/, js/ (app, store, views/ = screens, ui/ = dialogs and
                        toasts, fx/ = pixel effects), vendor/ (lit-html), fonts/, brand/
 scripts/

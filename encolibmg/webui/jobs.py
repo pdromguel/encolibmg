@@ -26,6 +26,7 @@ class JobManager:
         self._ids = itertools.count(1)
         self.current: dict | None = None
         self._cancel = threading.Event()
+        self.on_idle: Callable[[], None] | None = None  # called after every job ends
 
     @property
     def busy(self) -> bool:
@@ -45,14 +46,18 @@ class JobManager:
         self._emit("job", {"type": "start", **self.current})
         last = {"t": 0.0, "step": None}
 
-        def progress(step: str, frac: float | None = None):
-            """`step` is an i18n key ("step.download") or ready text; the UI gets both the text and the key."""
+        def progress(step: str, frac: float | None = None, key: str | None = None):
+            """`step` is an i18n key ("step.download") or ready text; the UI gets both the text and the key.
+            Ready text can name its key too (the queue shows "Artist - Song · Separating vocals")."""
             now = time.monotonic()
             if step == last["step"] and now - last["t"] < MIN_INTERVAL and frac not in (None, 1.0):
                 return
             last.update(t=now, step=step)
-            key = step if step.startswith("step.") else None
-            text = t(step) if key else step
+            if key is None:
+                key = step if step.startswith("step.") else None
+                text = t(step) if key else step
+            else:
+                text = step
             if self.current:
                 self.current.update(step=text, key=key, frac=frac)
             self._emit("job", {"type": "progress", "id": job_id, "step": text, "key": key, "frac": frac})
@@ -77,6 +82,11 @@ class JobManager:
             kind = self.current["kind"] if self.current else "job"
             self.current = None
         self._emit("job", {"id": job_id, "label": label, "kind": kind, **payload})
+        if self.on_idle is not None:
+            try:
+                self.on_idle()  # e.g. the download queue starts again after another job
+            except Exception:
+                log.exception("on_idle failed")
 
     def cancel(self) -> bool:
         if self.current:

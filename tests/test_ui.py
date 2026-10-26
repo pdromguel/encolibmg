@@ -103,6 +103,40 @@ SCRIPT = [
     {"until": f"{Q}('.offset').textContent.includes('0.10')"},
     {"js": key("s", ctrl=True)},
     {"until": f"{Q}('#toasts').textContent.includes('Lyrics saved')"},
+    # download queue left from a "previous session": starts paused, nothing is downloaded here
+    {"until": f"{Q}('.qchip')"},
+    {"read": f"{Q}('.qchip').textContent.replace(/\\s+/g, ' ').trim()", "as": "q_chip"},
+    {"js": f"{Q}('.qchip').click()"},
+    {"until": f"{Q}('.qpanel .qrow')"},
+    {"read": texts(".qrow .st"), "as": "q_status"},
+    {"read": f"{Q}('.qnote').textContent.trim()", "as": "q_note"},
+    {"read": texts(".qhead button"), "as": "q_buttons"},
+    {"js": click_text(".qrow.s-failed button", "Try again")},
+    {"until": f"!{Q}('.qrow.s-failed')"},
+    {"js": click_text(".qhead button", "Clear finished")},
+    {"until": f"!{Q}('.qrow.s-done')"},
+    {"js": f"{Q}('.qrow:last-child .qacts button:last-child').click()"},
+    {"until": "document.querySelectorAll('.qrow').length === 1"},
+    {"read": texts(".qrow .t"), "as": "q_left"},
+    {"js": f"{Q}('.qhead .btn.icon').click()"},
+    {"until": f"!{Q}('.qpanel')"},
+    # "Add a list" with nothing usable in it
+    {"go": "add"},
+    {"js": click_text(".page-head button", "Add a list")},
+    {"until": f"{Q}('textarea[data-list]')"},
+    {"js": "(() => { const a = document.querySelector('textarea[data-list]'); a.value = '# nothing here';"
+           " a.dispatchEvent(new Event('input')); })()"},
+    {"js": f"{Q}('.scrim .foot .btn:not(.ghost)').click()"},
+    {"until": f"{Q}('#toasts').textContent.includes('No songs found')"},
+    {"js": "document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))"},
+    {"until": f"!{Q}('.scrim')"},
+    # ticking a search result shows the "add to queue" bar
+    {"js": "window.__encolib.store.setView('add', { results: [{ id: 7, artist: 'Placeholder Band', title: 'Picked Song',"
+           " album: '', duration: 30, synced: true }], picked: [] })"},
+    {"until": f"{Q}('.res input[type=checkbox]')"},
+    {"js": f"{Q}('.res input[type=checkbox]').click()"},
+    {"until": f"{Q}('.bulk')"},
+    {"read": f"{Q}('.bulk .btn').textContent.trim()", "as": "add_bar"},
     # look & sound tabs
     {"go": "visual"},
     {"until": f"{Q}('.tabs button')"},
@@ -122,6 +156,13 @@ def run(tmp_path_factory):
     lib = make_library(root)
     appdata = root / "appdata"
     (appdata / "EncoLibMG").mkdir(parents=True)
+    (appdata / "EncoLibMG" / "queue.json").write_text(json.dumps({"items": [
+        {"id": "q1", "artist": "Placeholder Band", "title": "Done Song", "library": str(lib), "source": "list",
+         "state": "done", "level": "full"},
+        {"id": "q2", "artist": "Placeholder Band", "title": "Missing Words", "library": str(lib), "source": "list",
+         "state": "failed", "reason": "no_lyrics"},
+        {"id": "q3", "artist": "Placeholder Band", "title": "Still Waiting", "library": str(lib), "source": "list"},
+    ]}), encoding="utf-8")
     (appdata / "EncoLibMG" / "config.json").write_text(json.dumps({"library": str(lib), "language": "en"}),
                                                        encoding="utf-8")
     steps, result = root / "steps.json", root / "result.json"
@@ -181,3 +222,18 @@ def test_language_switch_is_live(run):
     assert v["visual_tabs"][0] == "Background videos"
     assert [n[1:] for n in v["nav_pt"]][:3] == ["Início", "Adicionar", "Biblioteca"]
     assert v["visual_tabs_pt"][0] == "Vídeos de fundo" and v["lang_pt"] == "pt-BR"
+
+
+def test_download_queue_panel(run):
+    v = run["values"]
+    assert v["q_chip"] == "Queue 1/3 ✕ 1"
+    assert v["q_status"] == ["ready", "no synced lyrics", "waiting"]
+    assert v["q_note"].startswith("Paused")
+    assert "Resume" in " ".join(v["q_buttons"])
+    assert v["q_left"] == ["Placeholder Band - Missing Words"]
+    saved = json.loads((run["lib"].parent / "appdata" / "EncoLibMG" / "queue.json").read_text(encoding="utf-8"))
+    assert [(i["title"], i["state"]) for i in saved["items"]] == [("Missing Words", "waiting")]
+
+
+def test_add_screen_queue_controls(run):
+    assert run["values"]["add_bar"] == "Add 1 to queue"

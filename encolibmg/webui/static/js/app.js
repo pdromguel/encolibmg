@@ -4,12 +4,13 @@ import { html, render } from "../vendor/lit-html.js";
 import { call, on, tryCall } from "./api.js";
 import { loadBrand } from "./fx/elements.js";
 import { fmtTime } from "./fx/core.js";
-import { pixelWipe } from "./fx/effects.js";
+import { confetti, pixelWipe } from "./fx/effects.js";
 import { player } from "./player.js";
-import { set, state, subscribe } from "./store.js";
+import { set, setView, state, subscribe } from "./store.js";
 import { closeMenu, menu, modal, modalOpen, promptDialog } from "./ui/dialogs.js";
 import { toast } from "./ui/toast.js";
 import { screens, NAV } from "./views/index.js";
+import { openQueue, queueChip, queuePanel } from "./views/queue.js";
 import { setCatalog, t, tt } from "./i18n.js";
 
 const root = document.getElementById("app");
@@ -46,6 +47,10 @@ export async function refresh({ tracks = true } = {}) {
     const list = await tryCall("tracks");
     if (list) set({ tracks: list });
   } else if (!app?.library) set({ tracks: null });
+  if (app?.library) {
+    const q = await tryCall("queue_state");  // the queue belongs to the open library
+    if (q) set({ queue: q });
+  }
 }
 
 export async function chooseLibrary() {
@@ -173,6 +178,7 @@ function dock(s) {
       </div>`
       : html`<div class="job idle"><pixel-progress value=""></pixel-progress>
         <span class="step">${s.lastJob || t("ui.dock.ready")}</span></div>`}
+    ${queueChip(s)}
     ${p ? html`<div class="player">
         <pixel-identicon name=${p.base}></pixel-identicon>
         <span class="t ellipsis">${p.title}</span>
@@ -188,7 +194,7 @@ function dock(s) {
 
 function shell(s) {
   const scr = screens[s.route.name] || screens.home;
-  return html`${header(s)}<main><div class="view" data-screen=${s.route.name}>${scr.render(s)}</div></main>${dock(s)}`;
+  return html`${header(s)}<main><div class="view" data-screen=${s.route.name}>${scr.render(s)}</div></main>${queuePanel(s)}${dock(s)}`;
 }
 
 subscribe(s => render(shell(s), root));
@@ -201,7 +207,32 @@ on("job", ev => {
     const label = state.job?.label || ev.label || "";
     set({ job: null, lastJob: ev.type === "done" ? `✓ ${label}` : ev.type === "cancelled" ? t("ui.job.cancelled_label", { label }) : t("ui.job.failed_label", { label }) });
     if (ev.type === "error") toast(ev.error, { kind: "bad", detail: label });
+    if (ev.kind === "queue") { if (ev.type === "done") queueFinished(ev.result); return; }  // pausing is not news
     if (ev.type === "cancelled") toast(t("ui.job.cancelled"), { kind: "info", detail: label });
+  }
+});
+
+/** The summary when the queue runs out: what came in, at which level. */
+function queueFinished(sum) {
+  if (!sum) return;
+  const parts = [["full", "ui.queue.sum.full"], ["no_guide", "ui.queue.sum.no_guide"], ["skipped", "ui.queue.sum.skipped"],
+                 ["failed", "ui.queue.sum.failed"]].filter(([k]) => sum[k]).map(([k, key]) => t(key, { count: sum[k] }));
+  if (!parts.length) return;
+  toast(t("ui.queue.finished"), { kind: sum.failed ? "warn" : "ok", detail: parts.join(" · "),
+    actions: [{ label: t("ui.queue.show"), run: openQueue }] });
+}
+
+// a song picked on the Add screen gets its own "ready" notice, like before the queue existed
+on("queue", q => {
+  const before = new Map((state.queue?.items || []).map(i => [i.id, i.state]));
+  set({ queue: q });
+  for (const it of q.items) {
+    if (it.state !== "done" || before.get(it.id) === "done" || !before.has(it.id) || it.source !== "search") continue;
+    confetti(innerWidth - 160, innerHeight - 60, 40);
+    toast(t("ui.add.done", { title: it.title }), { kind: "ok", actions: [
+      { label: t("ui.add.see_in_library"), primary: true, run: () => { setView("library", { selected: it.base }); go("library"); } },
+      ...(it.level === "full" ? [{ label: t("ui.add.guide_preview"), run: () => go("guide", it.base) }] : []),
+    ] });
   }
 });
 on("library", () => refresh());
