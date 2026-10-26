@@ -3,7 +3,7 @@
 <p><a href="user-guide.md">English</a> · <b>Português (Brasil)</b></p>
 
 ## Primeiros passos
-1. Dê dois cliques em `EncoLibMG.bat`.
+1. Instale com o `EncoLibMG-…-Setup.exe` e abra o **EncoLibMG** pelo Menu Iniciar (a partir do código: `EncoLibMG.bat`).
 2. No topo, clique no nome da biblioteca → **Abrir ou criar** (ou `Ctrl O`). Se a pasta ainda não for uma
    biblioteca, o app cria a `EncoreLibrary` com o `manifest.json`.
 3. No Encore, aponte o Setup (F2) para a pasta da biblioteca. O Encore também acha sozinho qualquer pasta

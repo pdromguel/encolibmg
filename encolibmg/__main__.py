@@ -36,7 +36,8 @@ def main():
     from encolibmg.core import gpu, i18n
     from encolibmg.core.paths import load_config
 
-    logging.info("AI device: %s", gpu.choose_device())  # before anything imports torch
+    # before anything imports torch; "gpu" = a usable NVIDIA card (used if the CUDA build of PyTorch is installed)
+    logging.info("NVIDIA card for the AI steps: %s", gpu.choose_device())
     i18n.set_language(load_config().get("language", "auto"))
     try:
         from encolibmg.webui.app import run

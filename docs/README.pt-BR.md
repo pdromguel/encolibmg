@@ -88,14 +88,19 @@ pouco, conforme a sua internet):
 
 ## Começo rápido
 
-1. Instale o **Python 3.12** e o **ffmpeg** (`winget install Gyan.FFmpeg`). O Windows 10/11 já traz o WebView2.
-2. Baixe a [versão mais recente](https://github.com/pdromguel/encolibmg/releases/latest) (ou clone o repositório) e
-   dê dois cliques em **`install.bat`**. Ele baixa o PyTorch e escolhe a versão certa para o seu PC (a versão para
-   NVIDIA ocupa ~8 GB instalada); veja [Hardware](#hardware-o-que-você-precisa-e-o-que-esperar).
-3. Dê dois cliques em **`EncoLibMG.bat`**, abra ou crie uma biblioteca e busque uma música.
+1. Baixe o **`EncoLibMG-1.0.0-Setup.exe`** da [versão mais recente](https://github.com/pdromguel/encolibmg/releases/latest)
+   e rode. Não precisa ser administrador. Ele baixa o próprio Python, o ffmpeg e o PyTorch certo para o seu PC: cerca
+   de 4 GB instalado sem placa NVIDIA, cerca de 8 GB com uma (veja
+   [Hardware](#hardware-o-que-você-precisa-e-o-que-esperar)).
+   O Windows pode avisar que o app não é reconhecido (o instalador não tem assinatura digital): **Mais informações →
+   Executar assim mesmo**.
+2. Abra o **EncoLibMG** pelo Menu Iniciar, abra ou crie uma biblioteca e busque uma música.
+3. Aponte o Setup (F2) do Encore para a pasta da biblioteca.
 
-Depois aponte o Setup (F2) do Encore para a pasta da biblioteca. O app fala português do Brasil e inglês
-(segue o Windows; troque quando quiser no **PT/EN**).
+Quem desenvolve pode rodar a partir do código: veja [como contribuir](../.github/CONTRIBUTING.md) (em inglês).
+
+O app fala português do Brasil e inglês (segue o Windows; troque quando quiser no **PT/EN**), avisa quando sai
+versão nova e atualiza o baixador do YouTube pela **Ajuda → Sobre**.
 
 ## Saiba mais
 

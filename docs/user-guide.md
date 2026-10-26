@@ -3,7 +3,7 @@
 <p><b>English</b> · <a href="user-guide.pt-BR.md">Português (Brasil)</a></p>
 
 ## Getting started
-1. Double-click `EncoLibMG.bat`.
+1. Install with `EncoLibMG-…-Setup.exe` and open **EncoLibMG** from the Start menu (from source: `EncoLibMG.bat`).
 2. At the top, click the library name → **Open or create** (or `Ctrl O`). If the folder isn't a library yet,
    the app creates the `EncoreLibrary` folder with its `manifest.json`.
 3. In Encore, point Setup (F2) at the library folder. Encore also finds any folder named `EncoreLibrary` on
