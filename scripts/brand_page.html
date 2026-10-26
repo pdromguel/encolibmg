@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EncoLibMG — Identidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep:#0c0e10; --bg:#101315; --surface:#14181a; --border:#23282b; --border-strong:#4b4e55;
+  --text:#cacccc; --text-2:#a5aeb4; --muted:#8a8d90; --brand:#798186; --brand-ink:#0c0e10;
+  --field-bg:#080a0b; --field-dim:#2a2e30; --field-mid:#4e5457; --field-lit:#798186; --field-hover:#a1a7aa; --field-crest:#cccfd1;
+  --ok:#8fae8b; --warn:#c9b27a; --bad:#c98b8b; --info:#8ba7c9;
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 "JetBrains Mono", ui-monospace, monospace; }
+::selection { background: #343d41; }
+a { color: inherit; }
+header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 14px; padding: 12px 20px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+header .name { font-weight: 500; letter-spacing: -.5px; }
+header nav { display: flex; gap: 18px; margin-left: 16px; color: var(--text-2); font-size: 13px; }
+header nav a { text-decoration: none; } header nav a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+header .pill { margin-left: auto; font-size: 12px; color: var(--muted); border: 1px solid var(--border-strong); padding: 2px 8px; }
+.hero { position: relative; height: 78vh; min-height: 460px; overflow: hidden; display: grid; place-items: center; }
+.hero canvas.field { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero .inner { position: relative; text-align: center; pointer-events: none; }
+.hero canvas.word { display: block; margin: 0 auto; image-rendering: pixelated; }
+.tag { margin-top: 22px; font-size: 20px; font-weight: 500; letter-spacing: -.5px; min-height: 1.6em; }
+.tag .caret { display: inline-block; width: .6em; height: 1.1em; background: var(--text); vertical-align: -3px; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+.sub { color: var(--text-2); margin-top: 6px; }
+@keyframes blink { 50% { opacity: 0; } }
+.rise { opacity: 0; transform: translateY(14px); animation: rise .6s var(--ease) forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+section { max-width: 1120px; margin: 0 auto; padding: 72px 20px; border-top: 1px solid var(--border); }
+h2 { font-size: 26px; font-weight: 500; letter-spacing: -.75px; margin: 0 0 6px; }
+.lead { color: var(--text-2); max-width: 70ch; margin: 0 0 28px; }
+.marks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: var(--bg-deep); box-shadow: 0 0 0 1px var(--border); padding: 20px; transition: box-shadow .2s var(--ease), transform .2s var(--ease); cursor: pointer; }
+.card:hover { box-shadow: 0 0 0 1px var(--border-strong); transform: translateY(-2px); }
+.card .stage { display: grid; place-items: center; height: 220px; background: var(--field-bg); box-shadow: inset 0 0 0 1px var(--border); }
+.card h3 { margin: 16px 0 2px; font-size: 16px; font-weight: 500; }
+.card h3 kbd { font: 11px "JetBrains Mono"; border: 1px solid var(--border-strong); padding: 0 5px; margin-right: 6px; color: var(--text-2); }
+.card p { margin: 0; color: var(--text-2); font-size: 13px; }
+.sizes { display: flex; align-items: end; gap: 16px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); color: var(--muted); font-size: 11px; }
+.sizes figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.sizes canvas { image-rendering: pixelated; }
+.lockup { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px; background: var(--bg); box-shadow: 0 0 0 1px var(--border); }
+.lockup .t { font-weight: 500; letter-spacing: -.5px; } .lockup .t b { color: var(--brand); font-weight: 500; }
+.lockup.light { background: #f5f5f5; color: #111; box-shadow: none; } .lockup.light .t b { color: #6e6e6e; }
+.grid2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; }
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.sw { box-shadow: 0 0 0 1px var(--border); }
+.sw div { height: 64px; }
+.sw span { display: block; padding: 6px 8px; font-size: 11px; color: var(--text-2); }
+.sw span b { display: block; color: var(--text); font-weight: 500; }
+.type .big { font-size: 34px; font-weight: 500; letter-spacing: -1px; line-height: 1.2; }
+.type .row { display: flex; gap: 18px; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.type .row span:first-child { width: 90px; color: var(--muted); font-size: 11px; flex: none; }
+kbd { font: 12px "JetBrains Mono"; border: 1px solid var(--border-strong); padding: 0 6px; color: var(--text-2); }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; font: 500 14px "JetBrains Mono"; border: 0; cursor: pointer;
+  background: var(--brand); color: var(--brand-ink); transition: background .15s var(--ease); }
+.btn:hover { background: var(--field-hover); }
+.btn.ghost { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--text-2); }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.badge { font-size: 11px; padding: 1px 6px; box-shadow: inset 0 0 0 1px currentColor; }
+.voice li { margin: 6px 0; color: var(--text-2); } .voice li b { color: var(--text); font-weight: 500; }
+.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.rule { padding: 16px; box-shadow: 0 0 0 1px var(--border); background: var(--bg-deep); }
+.rule h4 { margin: 0 0 6px; font-weight: 500; font-size: 14px; } .rule p { margin: 0; font-size: 13px; color: var(--text-2); }
+.rule canvas { display: block; margin-bottom: 10px; image-rendering: pixelated; }
+footer { text-align: center; color: var(--muted); font-size: 12px; padding: 40px 20px 60px; border-top: 1px solid var(--border); }
+@media (max-width: 860px) { .marks, .rules, .grid2 { grid-template-columns: 1fr; } .swatches { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<header>
+  <canvas id="hdrmark" width="16" height="16" style="width:20px;height:20px;image-rendering:pixelated"></canvas>
+  <span class="name">EncoLibMG</span>
+  <nav><a href="#marca">Marca</a><a href="#cores">Cores</a><a href="#tipo">Tipografia</a><a href="#pixels">Pixels</a><a href="#voz">Voz</a></nav>
+  <span class="pill">identidade · v0</span>
+</header>
+
+<div class="hero">
+  <canvas class="field" id="field"></canvas>
+  <div class="inner">
+    <canvas class="word" id="word"></canvas>
+    <div class="tag rise" style="animation-delay:1.1s"><span id="typed"></span><span class="caret"></span></div>
+    <div class="sub rise" style="animation-delay:1.3s">Gerenciador de bibliotecas para o Encore Karaoke · Multiplex, guia MIDI, letra palavra a palavra.</div>
+  </div>
+</div>
+
+<section id="marca">
+  <h2>Escolha a marca</h2>
+  <p class="lead">Três conceitos desenhados numa grade de 16×16 pixels, a mesma lógica do logo do Omarchy. Passe o mouse para ver a montagem; abaixo, cada um em tamanho de ícone (64, 32, 16 px) e com o nome.</p>
+  <div class="marks" id="marks"></div>
+</section>
+
+<section id="cores">
+  <div class="grid2">
+    <div>
+      <h2>Cores</h2>
+      <p class="lead">Tema único "Solitude": grafite monocromático. Cor só onde ela informa: os quatro tons de estado aparecem em selos e ícones, nunca em áreas grandes.</p>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div>
+      <h2>Escala do campo</h2>
+      <p class="lead">Os pixels animados usam só esta rampa, do apagado à crista.</p>
+      <canvas id="ramp" width="440" height="80" style="width:100%;max-width:440px"></canvas>
+      <div class="badges">
+        <span class="badge" style="color:var(--text-2)">[MP]</span><span class="badge" style="color:var(--text-2)">[LRC]</span>
+        <span class="badge" style="color:var(--info)">[GUIA]</span><span class="badge" style="color:var(--text-2)">[CLIPE]</span>
+        <span class="badge" style="color:var(--ok)">✓ sincronizada</span><span class="badge" style="color:var(--warn)">volume</span>
+        <span class="badge" style="color:var(--bad)">⚠ invisível</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tipo" class="type">
+  <h2>Tipografia</h2>
+  <p class="lead">JetBrains Mono em tudo (licença OFL, embutida no app). Peso 500 nos títulos com espaçamento negativo; 400 no texto.</p>
+  <div class="big">Sua biblioteca de karaokê, afinada.</div>
+  <div class="row"><span>Título 26/500</span><span style="font-size:26px;font-weight:500;letter-spacing:-.75px">Biblioteca</span></div>
+  <div class="row"><span>Texto 15/400</span><span>38 faixas · 12 com guia · 2 problemas</span></div>
+  <div class="row"><span>Detalhe 12</span><span style="font-size:12px;color:var(--text-2)">Pressione <kbd>/</kbd> para buscar, <kbd>?</kbd> para ver os atalhos</span></div>
+  <div class="row"><span>Botões</span><span><button class="btn">⬇ Baixar completa</button> <button class="btn ghost">▶ Prévia do guia</button></span></div>
+</section>
+
+<section id="pixels">
+  <h2>Regras de pixel</h2>
+  <p class="lead">Tudo que é "pixel" segue a mesma grade, para o app inteiro parecer uma coisa só.</p>
+  <div class="rules">
+    <div class="rule"><canvas id="r1" width="120" height="60"></canvas><h4>Célula 10px, intervalo 1px</h4><p>Quadrados, nunca círculos. Cantos retos em toda a interface, bordas de 1px.</p></div>
+    <div class="rule"><canvas id="r2" width="120" height="60"></canvas><h4>Colchetes de canto</h4><p>Os cantos em "L" enquadram o que importa: marca, item selecionado, área de soltar arquivos.</p></div>
+    <div class="rule"><canvas id="r3" width="120" height="60"></canvas><h4>Preenchimento de karaokê</h4><p>Progresso é sempre um "preenchimento de letra": da esquerda para a direita, aceso sobre apagado.</p></div>
+  </div>
+</section>
+
+<section id="voz" class="voice">
+  <h2>Voz</h2>
+  <p class="lead">Curta, direta, em português, como um terminal simpático.</p>
+  <ul>
+    <li><b>"Separando a voz… 62%"</b> em vez de "Processando, aguarde"</li>
+    <li><b>"Pronto: Someone Like You entrou na biblioteca."</b> diz o resultado, não o processo</li>
+    <li><b>"Não achei letra sincronizada. Quer um vídeo de karaokê?"</b> todo erro sugere um caminho</li>
+    <li><b>Atalhos sempre visíveis</b> em <kbd>kbd</kbd> ao lado das ações</li>
+  </ul>
+</section>
+
+<footer>EncoLibMG · identidade visual · inspirada na linguagem de omarchy.org, desenho original</footer>
+
+<script>
+const DATA = __DATA__;
+const P = DATA.palette;
+const CONCEPTS = {
+  A: ["Equalizador E", "Monograma: os braços do E são barras de nível, e o do meio ainda está \"soando\". Simples, forte em 16px, vira ícone de app."],
+  B: ["Letra cantada", "Uma linha de karaokê no meio do preenchimento e a próxima esperando, entre colchetes. É exatamente o que o app produz."],
+  C: ["Microfone", "O símbolo universal de karaokê, sólido, com as grades em tom médio e os mesmos colchetes de canto."],
+};
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ease = t => 1 - Math.pow(1 - t, 3);
+
+function cellsOf(grid) {
+  const out = [];
+  grid.forEach((row, y) => [...row].forEach((c, x) => { if (c === "#" || c === "+") out.push({ x, y, c }); }));
+  return out;
+}
+
+// Pixel art that assembles from scattered points; re-plays on demand
+function assembler(canvas, grid, cell, gap, opts = {}) {
+  const w = Math.max(...grid.map(r => r.length)), h = grid.length;
+  const dpr = devicePixelRatio || 1;
+  canvas.width = (w * cell) * dpr; canvas.height = (h * cell) * dpr;
+  canvas.style.width = w * cell + "px"; canvas.style.height = h * cell + "px";
+  const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr);
+  const cells = cellsOf(grid).map(c => ({ ...c, ox: 0, oy: 0, d: 0 }));
+  let t0 = 0, raf = 0, mouse = null;
+  function scatter() {
+    t0 = performance.now();
+    cells.forEach(c => {
+      const a = Math.random() * Math.PI * 2, r = (opts.spread || 1.6) * Math.max(w, h) * cell * (0.4 + Math.random());
+      c.ox = Math.cos(a) * r; c.oy = Math.sin(a) * r; c.d = Math.random() * (opts.stagger || 500) + (c.x / w) * 300;
+    });
+  }
+  function frame(now) {
+    ctx.clearRect(0, 0, w * cell, h * cell);
+    let busy = false;
+    for (const c of cells) {
+      const k = reduce ? 1 : Math.min(1, Math.max(0, (now - t0 - c.d) / (opts.dur || 700)));
+      if (k < 1) busy = true;
+      const e = ease(k);
+      let x = c.x * cell + c.ox * (1 - e), y = c.y * cell + c.oy * (1 - e);
+      if (mouse && k === 1) {
+        const dx = x - mouse.x, dy = y - mouse.y, dist = Math.hypot(dx, dy);
+        if (dist < cell * 4) { const push = (1 - dist / (cell * 4)) * cell * .35; x += (Math.random() - .5) * push; y += (Math.random() - .5) * push; busy = true; }
+      }
+      // shimmer sweep every ~8s
+      const sweep = ((now / 8000) % 1) * (w + 12) - 6;
+      const lit = Math.abs(c.x - sweep) < 1.2;
+      ctx.globalAlpha = .25 + .75 * e;
+      ctx.fillStyle = c.c === "#" ? (lit ? P["field-crest"] : opts.lit || P.text) : (lit ? P["field-hover"] : opts.mid || P["field-mid"]);
+      ctx.fillRect(x, y, cell - gap, cell - gap);
+    }
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(frame);
+  }
+  canvas.addEventListener("mousemove", e => { const r = canvas.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; });
+  canvas.addEventListener("mouseleave", () => mouse = null);
+  scatter(); raf = requestAnimationFrame(frame);
+  return { replay: scatter };
+}
+
+function staticDraw(canvas, grid, px, gap = 0, lit = P.text, mid = P["field-mid"]) {
+  const w = Math.max(...grid.map(r => r.length)), h = grid.length;
+  canvas.width = w * px; canvas.height = h * px;
+  const ctx = canvas.getContext("2d");
+  cellsOf(grid).forEach(c => { ctx.fillStyle = c.c === "#" ? lit : mid; ctx.fillRect(c.x * px, c.y * px, px - gap, px - gap); });
+}
+
+// Background field: flicker at the edges, slow crests, diamond cursor trail, click ripple
+function field(canvas) {
+  const ctx = canvas.getContext("2d"), C = 10, G = 1;
+  let cols, rows, heat, base, dpr, mouse = null, ripples = [];
+  const ramp = [P["field-bg"], P["field-dim"], P["field-mid"], P["field-lit"], P["field-hover"], P["field-crest"]];
+  function resize() {
+    dpr = devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * dpr; canvas.height = canvas.clientHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.ceil(canvas.clientWidth / C); rows = Math.ceil(canvas.clientHeight / C);
+    heat = new Float32Array(cols * rows); base = new Float32Array(cols * rows);
+    // density: strong at the sides and the bottom, fading smoothly to nothing in the middle
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const edge = Math.min(x, cols - 1 - x) / cols;
+      const side = Math.pow(Math.max(0, 1 - edge / .24), 2);
+      const bottom = Math.pow(Math.max(0, (y / rows - .55) / .45), 2);
+      base[y * cols + x] = Math.min(1, Math.max(side * .95, bottom * .85) + side * bottom * .3);
+    }
+  }
+  resize(); addEventListener("resize", resize);
+  canvas.parentElement.addEventListener("mousemove", e => { const r = canvas.getBoundingClientRect(); mouse = { x: (e.clientX - r.left) / C | 0, y: (e.clientY - r.top) / C | 0 }; });
+  canvas.parentElement.addEventListener("mouseleave", () => mouse = null);
+  canvas.parentElement.addEventListener("click", e => { const r = canvas.getBoundingClientRect(); ripples.push({ x: (e.clientX - r.left) / C, y: (e.clientY - r.top) / C, t: performance.now() }); });
+  function frame(now) {
+    ctx.fillStyle = P.bg; ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    const crest = ((now / 9000) % 1) * (cols + rows) * 1.4 - rows;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      let v = heat[i] * .93;
+      // a few pixels wake up each frame, more of them where the density is high
+      if (Math.random() < base[i] * .035) v = Math.max(v, (.25 + Math.random() * .55) * (.5 + base[i] * .5));
+      if (mouse) { const d = Math.abs(x - mouse.x) + Math.abs(y - mouse.y); if (d < 4) v = Math.max(v, (4 - d) / 4 * .95); }
+      for (const r of ripples) { const age = (now - r.t) / 1000, d = Math.abs(Math.hypot(x - r.x, y - r.y) - age * 32); if (age < 1.2 && d < .8) v = Math.max(v, (1 - age / 1.2)); }
+      const wave = Math.max(0, 1 - Math.abs((x + y) - crest) / 2) * .7 * base[i];
+      heat[i] = v;
+      const level = Math.max(v, wave);
+      if (level < .1) continue;
+      ctx.fillStyle = ramp[Math.min(5, 1 + (level * 5) | 0)];
+      ctx.fillRect(x * C, y * C, C - G, C - G);
+    }
+    ripples = ripples.filter(r => now - r.t < 1200);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// typed tagline
+function typer(el, lines) {
+  let li = 0, ci = 0, dir = 1;
+  (function tick() {
+    const s = lines[li];
+    ci += dir; el.textContent = s.slice(0, ci);
+    let wait = dir > 0 ? 55 + Math.random() * 60 : 25;
+    if (ci === s.length && dir > 0) { dir = -1; wait = 2200; }
+    else if (ci === 0 && dir < 0) { dir = 1; li = (li + 1) % lines.length; wait = 400; }
+    setTimeout(tick, wait);
+  })();
+}
+
+// ---- build page
+field(document.getElementById("field"));
+const word = assembler(document.getElementById("word"), DATA.wordmark, Math.min(9, Math.floor(innerWidth * .8 / 108)), 1, { spread: .9, stagger: 700, dur: 900 });
+setTimeout(() => typer(document.getElementById("typed"), ["Sua biblioteca de karaokê, afinada.", "Queen - Bohemian Rhapsody", "Multiplex + LRC + guia", "Adele - Someone Like You"]), 1100);
+staticDraw(document.getElementById("hdrmark"), DATA.marks[DATA.chosen], 1);
+
+const marksEl = document.getElementById("marks");
+for (const [k, grid] of Object.entries(DATA.marks)) {
+  const card = document.createElement("div");
+  card.className = "card rise"; card.style.animationDelay = (Object.keys(DATA.marks).indexOf(k) * 80) + "ms";
+  card.innerHTML = `<div class="stage"><canvas></canvas></div>
+    <h3><kbd>${k}</kbd>${CONCEPTS[k][0]}${k === DATA.chosen ? " <span class=\"badge\" style=\"color:var(--ok)\">✓ escolhida</span>" : ""}</h3><p>${CONCEPTS[k][1]}</p>
+    <div class="sizes"><figure><canvas></canvas>64</figure><figure><canvas></canvas>32</figure><figure><canvas></canvas>16</figure></div>
+    <div class="lockup"><canvas></canvas><span class="t">EncoLib<b>MG</b></span></div>
+    <div class="lockup light"><canvas></canvas><span class="t">EncoLib<b>MG</b></span></div>`;
+  marksEl.appendChild(card);
+  const cs = card.querySelectorAll("canvas");
+  const a = assembler(cs[0], grid, 11, 1);
+  card.addEventListener("mouseenter", () => a.replay());
+  [4, 2, 1].forEach((px, i) => staticDraw(cs[1 + i], grid, px));
+  staticDraw(cs[4], grid, 2); cs[4].style.width = cs[4].style.height = "28px";
+  staticDraw(cs[5], grid, 2, 0, "#111", "#9a9a9a"); cs[5].style.width = cs[5].style.height = "28px";
+}
+
+const SW = [["bg-deep", "fundo profundo"], ["bg", "fundo"], ["surface", "superfície"], ["border-strong", "borda forte"],
+            ["text", "texto"], ["text-2", "texto 2"], ["muted", "apagado"], ["brand", "marca"]];
+const swEl = document.getElementById("swatches");
+for (const [k, label] of SW) swEl.insertAdjacentHTML("beforeend", `<div class="sw"><div style="background:${P[k]}"></div><span><b>${label}</b>${P[k]}</span></div>`);
+for (const [k, v] of [["ok", "#8fae8b"], ["warn", "#c9b27a"], ["bad", "#c98b8b"], ["info", "#8ba7c9"]])
+  swEl.insertAdjacentHTML("beforeend", `<div class="sw"><div style="background:${v}"></div><span><b>${k}</b>${v}</span></div>`);
+
+(() => { const c = document.getElementById("ramp"), x = c.getContext("2d");
+  const ramp = ["field-bg", "field-dim", "field-mid", "field-lit", "field-hover", "field-crest"];
+  ramp.forEach((k, i) => {
+    for (let j = 0; j < 4; j++) for (let r = 0; r < 4; r++) { x.fillStyle = P[k]; x.fillRect(i * 73 + j * 12, 8 + r * 12, 11, 11); }
+    x.fillStyle = P.muted; x.font = "11px 'JetBrains Mono', monospace"; x.fillText(k.replace("field-", ""), i * 73, 72);
+  }); })();
+
+(() => { const r1 = document.getElementById("r1").getContext("2d");
+  for (let y = 0; y < 6; y++) for (let x = 0; x < 12; x++) { r1.fillStyle = (x + y) % 5 ? P["field-dim"] : P["field-lit"]; r1.fillRect(x * 10, y * 10, 9, 9); }
+  const r2 = document.getElementById("r2").getContext("2d"); r2.fillStyle = P.text;
+  [[0,0],[1,0],[2,0],[0,1],[0,2],[9,0],[10,0],[11,0],[11,1],[11,2],[0,3],[0,4],[0,5],[1,5],[2,5],[11,3],[11,4],[11,5],[10,5],[9,5]].forEach(([x,y]) => r2.fillRect(x*10, y*10, 9, 9));
+  const r3c = document.getElementById("r3"), r3 = r3c.getContext("2d"); let p = 0;
+  (function f() { r3.clearRect(0, 0, 120, 60); for (let x = 0; x < 12; x++) for (let y = 2; y < 4; y++) { r3.fillStyle = x < p ? P.text : P["field-mid"]; r3.fillRect(x*10, y*10, 9, 9); }
+    p = (p + .08) % 14; requestAnimationFrame(f); })(); })();
+</script>
+</body>
+</html>

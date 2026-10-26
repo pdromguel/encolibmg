@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# local runtime data (config, logs, backups live in %APPDATA%\EncoLibMG)
+*.log
+*.part
+.encore-tmp-*/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

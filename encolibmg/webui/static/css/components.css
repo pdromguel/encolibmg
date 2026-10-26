@@ -1,0 +1,124 @@
+/* App shell and shared components. */
+
+#app { position: fixed; inset: 0; display: grid; grid-template-rows: var(--header-h) 1fr var(--dock-h); }
+
+/* ---- header ---- */
+.hdr {
+  position: relative; z-index: 20; display: flex; align-items: center; gap: 22px; padding: 0 18px;
+  background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(8px);
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.brand pixel-mark { width: 20px; height: 20px; }
+.brand .name { font-weight: 600; letter-spacing: -.6px; font-size: 15px; }
+.brand .name b { font-weight: 600; color: var(--field-mid); transition: color var(--mid); }
+.brand:hover .name b { color: var(--brand); }
+.nav { display: flex; gap: 2px; height: 100%; }
+.nav a {
+  position: relative; display: flex; align-items: center; gap: 7px; padding: 0 11px; color: var(--text-2); font-size: 13px;
+  transition: color var(--fast);
+}
+.nav a .n { font-size: 10px; color: var(--muted); opacity: 0; transform: translateY(2px); transition: opacity var(--fast), transform var(--fast); }
+.hdr:hover .nav a .n { opacity: 1; transform: none; }
+.nav a:hover { color: var(--text); }
+.nav a.on { color: var(--text); }
+.nav a::after { /* pixel underline */
+  content: ""; position: absolute; left: 11px; right: 11px; bottom: 10px; height: 2px;
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 5px);
+  transform: scaleX(0); transform-origin: left; transition: transform var(--mid) var(--ease);
+}
+.nav a.on::after { transform: scaleX(1); }
+.hdr .right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.libchip { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; cursor: pointer; color: var(--text-2);
+  font-size: 12px; box-shadow: inset 0 0 0 1px var(--border); max-width: 300px; transition: box-shadow var(--fast), color var(--fast); }
+.libchip:hover { box-shadow: inset 0 0 0 1px var(--border-strong); color: var(--text); }
+.libchip .dot { width: 6px; height: 6px; background: var(--ok); flex: none; }
+.libchip.none .dot { background: var(--warn); }
+
+/* ---- main / views ---- */
+main { position: relative; overflow: hidden; }
+.view { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; }
+.page { max-width: 1180px; margin: 0 auto; padding: 34px 28px 60px; }
+.page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 22px; }
+.page-head .sub { color: var(--text-2); margin-top: 4px; }
+.panel { background: var(--bg-deep); box-shadow: var(--ring); }
+.sep { height: 1px; background: var(--border); margin: 18px 0; }
+
+/* ---- dock (footer) ---- */
+.dock {
+  position: relative; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 0 14px;
+  background: var(--bg-deep); box-shadow: inset 0 1px 0 var(--border); font-size: 12px; color: var(--text-2);
+}
+.dock .job { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.dock .job pixel-progress { width: 220px; height: 12px; flex: none; }
+.dock .job .step { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock .job .pct { color: var(--text); font-variant-numeric: tabular-nums; width: 38px; text-align: right; flex: none; }
+.dock .idle { color: var(--muted); }
+.player { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 6px 0 8px; box-shadow: inset 0 0 0 1px var(--border);
+  animation: rise var(--mid) var(--ease); }
+.player .t { max-width: 240px; color: var(--text); }
+.player pixel-identicon { width: 22px; height: 22px; }
+.player pixel-eq { width: 24px; height: 14px; }
+.player .time { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* ---- toasts ---- */
+.toasts { position: fixed; z-index: 60; right: 16px; top: calc(var(--header-h) + 14px); display: flex; flex-direction: column;
+  gap: 8px; width: 380px; pointer-events: none; }
+.toast { pointer-events: auto; display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; align-items: start;
+  padding: 12px 12px 12px 14px; background: var(--surface); box-shadow: var(--shadow-pop); animation: notice-in var(--mid) var(--ease); }
+.toast.out { opacity: 0; transform: translateX(16px); transition: opacity var(--mid), transform var(--mid); }
+.toast .sq { width: 10px; height: 10px; margin-top: 5px; background: var(--text-2); }
+.toast.ok .sq { background: var(--ok); } .toast.bad .sq { background: var(--bad); } .toast.warn .sq { background: var(--warn); }
+.toast.info .sq { background: var(--info); }
+.toast .msg { color: var(--text); font-size: 13px; line-height: 1.5; white-space: pre-line; }
+.toast .msg small { display: block; color: var(--text-2); font-size: 12px; }
+.toast .actions { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ---- modal ---- */
+.scrim { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: #05060799;
+  backdrop-filter: blur(3px); animation: fade var(--mid) var(--ease); }
+.scrim.out { opacity: 0; transition: opacity var(--mid); }
+.modal-wrap { position: relative; animation: rise var(--mid) var(--ease); }
+.modal { position: relative; width: min(560px, calc(100vw - 48px)); max-height: calc(100vh - 120px); overflow: auto;
+  background: var(--bg); box-shadow: var(--shadow-pop); padding: 22px 22px 18px; }
+.modal-wrap.wide .modal { width: min(900px, calc(100vw - 48px)); }
+.modal h2 { font-size: 18px; margin-bottom: 4px; }
+.modal .lead { color: var(--text-2); font-size: 13px; margin-bottom: 16px; }
+.modal .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.modal .x { position: absolute; top: 12px; right: 12px; }
+
+/* ---- drawer (track panel) ---- */
+.drawer { position: absolute; z-index: 15; top: 0; right: 0; bottom: 0; width: 420px; background: var(--bg);
+  box-shadow: -1px 0 0 var(--border), -30px 0 60px -30px #000; transform: translateX(100%);
+  transition: transform var(--slow) var(--ease); overflow-y: auto; }
+.drawer.open { transform: none; }
+
+/* ---- empty states ---- */
+.empty { display: grid; place-items: center; text-align: center; gap: 14px; padding: 70px 20px; color: var(--text-2); }
+.empty .box { padding: 34px 40px; }
+.empty h3 { color: var(--text); font-size: 18px; }
+
+/* ---- menus ---- */
+.menu { position: fixed; z-index: 55; min-width: 220px; padding: 6px; background: var(--surface); box-shadow: var(--shadow-pop);
+  animation: rise var(--fast) var(--ease); }
+.menu button { display: flex; align-items: center; gap: 10px; width: 100%; height: 32px; padding: 0 10px; border: 0;
+  background: transparent; color: var(--text-2); cursor: pointer; text-align: left; font-size: 13px; }
+.menu button:hover { background: #ffffff0a; color: var(--text); }
+.menu .lbl { padding: 6px 10px 4px; font-size: 11px; color: var(--muted); }
+
+/* ---- boot loader & route transition ---- */
+.boot { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--bg); }
+.boot.out { opacity: 0; transition: opacity 400ms var(--ease); pointer-events: none; }
+.boot pixel-mark { width: 64px; height: 64px; }
+canvas.wipe { position: fixed; z-index: 40; left: 0; right: 0; top: var(--header-h); bottom: var(--dock-h); pointer-events: none;
+  width: 100%; height: calc(100% - var(--header-h) - var(--dock-h)); }
+
+/* ---- help sheet ---- */
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: center; font-size: 13px; }
+.keys .k { display: flex; gap: 4px; justify-content: flex-end; }
+
+/* ---- tooltip ---- */
+[data-tip] { position: relative; }
+[data-tip]:hover::after { content: attr(data-tip); position: absolute; z-index: 70; left: 50%; bottom: calc(100% + 8px);
+  transform: translateX(-50%); padding: 4px 8px; white-space: nowrap; background: var(--surface-2); color: var(--text);
+  font-size: 11px; box-shadow: var(--ring-strong); animation: fade var(--fast) var(--ease) 300ms both; pointer-events: none; }

@@ -1,0 +1,101 @@
+// Verificar: finds what Encore would ignore or show wrong; groups by problem; fixes selected or everything.
+import { icon } from "../fx/icons.js";
+import { html } from "../../vendor/lit-html.js";
+import { runJob } from "../api.js";
+import { refresh } from "../app.js";
+import { confetti } from "../fx/overlay.js";
+import { setView, state, view } from "../store.js";
+import { toast } from "../ui/toast.js";
+import { noLibrary, pageHead, plural } from "./common.js";
+
+const WHAT = [
+  ["Áudio sem letra", "o Encore não mostra; busco a letra pela duração"],
+  ["Sem guia MIDI", "gera notas e palavras para o guia e a pontuação"],
+  ["Letra fora do padrão", "reescreve no formato que o Encore lê"],
+  ["Formato não aceito", "FLAC, WMA, MOV… viram mp3/mp4"],
+  ["Em subpasta", "o Encore só lê a raiz; move para lá"],
+  ["Manifest incompleto", "sem ele não aparece a categoria MTV"],
+  ["Sem tags", "grava artista e título no mp3"],
+  ["Volume", "opcional: deixa tudo em −16 LUFS"],
+];
+
+const v = () => view("check", { issues: null, results: {}, checked: [], loudness: false, running: false });
+
+async function run() {
+  const s = v();
+  setView("check", { running: true, results: {}, checked: [] });
+  try {
+    const issues = await runJob("check", s.loudness);
+    setView("check", { issues, running: false, checked: issues.filter(i => i.fixable).map(i => i.id) });
+    if (!issues.length) {
+      confetti(innerWidth / 2, innerHeight / 3);
+      toast("Nenhum problema: a biblioteca está redonda.", { kind: "ok" });
+    }
+  } catch (e) {
+    setView("check", { running: false });
+    if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" });
+  }
+}
+
+async function fix(ids) {
+  if (!ids.length) return;
+  try {
+    const out = await runJob("fix", ids);
+    const results = { ...v().results, ...out };
+    setView("check", { results, checked: v().checked.filter(i => !(i in out)) });
+    await refresh();
+    const ok = Object.values(out).filter(r => r.ok).length, bad = Object.values(out).length - ok;
+    toast(`${plural(ok, "correção feita", "correções feitas")}${bad ? `, ${bad} não deu` : ""}.`, { kind: bad ? "warn" : "ok" });
+    if (ok && !bad) confetti(innerWidth / 2, innerHeight / 3, 50);
+  } catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
+}
+
+function groups(issues) {
+  const map = new Map();
+  for (const i of issues) {
+    if (!map.has(i.kind)) map.set(i.kind, { kind: i.kind, label: i.label, items: [] });
+    map.get(i.kind).items.push(i);
+  }
+  return [...map.values()];
+}
+
+export const check = {
+  render(st) {
+    if (!st.app?.library) return html`<div class="page">${pageHead("Verificar", "")}${noLibrary()}</div>`;
+    const s = v(), busy = !!st.job;
+    const pending = s.issues ? s.issues.filter(i => i.fixable && !s.results[i.id]?.ok) : [];
+    return html`<div class="page chk">
+      ${pageHead("Verificar", "Acha o que o Encore ignoraria ou mostraria errado, e corrige.", html`
+        <label class="check"><input type="checkbox" .checked=${s.loudness} @change=${e => setView("check", { loudness: e.target.checked })}>
+          incluir volume <span class="muted">(~1 s por faixa)</span></label>
+        <button class="btn lg" ?disabled=${busy} @click=${run}>${icon("search")} ${s.issues ? "Verificar de novo" : "Verificar biblioteca"}</button>`)}
+      ${s.issues === null ? html`
+        <div class="whatgrid">${WHAT.map(([t, d], i) => html`<div class="what rise" style="--i:${i}"><b>${t}</b><span>${d}</span></div>`)}</div>`
+      : s.issues.length === 0 ? html`
+        <div class="empty rise"><div class="box brackets on"><pixel-mark style="width:56px;height:56px;margin:0 auto 14px"></pixel-mark>
+          <h3>Tudo certo</h3><p>Nenhum problema na biblioteca.</p></div></div>`
+      : html`
+        <div class="checkbar rise">
+          <span><b>${s.issues.length}</b> ${s.issues.length === 1 ? "problema" : "problemas"} · <b>${pending.length}</b> com correção automática</span>
+          <span class="grow"></span>
+          <button class="btn ghost" ?disabled=${busy || !s.checked.length} @click=${() => fix(s.checked)}>Corrigir selecionados (${s.checked.length})</button>
+          <button class="btn" ?disabled=${busy || !pending.length} @click=${() => fix(pending.map(i => i.id))}>Corrigir tudo (${pending.length})</button>
+        </div>
+        ${groups(s.issues).map((g, gi) => html`
+          <section class="igroup rise" style="--i:${gi + 1}">
+            <h4><span>${g.label}</span><span class="muted">${g.items.length}</span></h4>
+            ${g.items.map(i => {
+              const r = s.results[i.id];
+              return html`<div class="irow ${r ? (r.ok ? "fixed" : "failed") : ""} ${i.fixable ? "" : "manual"}">
+                ${i.fixable && !r?.ok ? html`<label class="check"><input type="checkbox" .checked=${s.checked.includes(i.id)}
+                  @change=${e => setView("check", { checked: e.target.checked ? [...s.checked, i.id] : s.checked.filter(x => x !== i.id) })}></label>`
+                  : html`<span class="ist">${r ? (r.ok ? "✓" : "✕") : "·"}</span>`}
+                <div class="grow"><div class="f ellipsis selectable">${i.file}</div>
+                  <div class="m">${r ? r.message : i.message}</div></div>
+                ${!i.fixable ? html`<span class="badge">manual</span>` : ""}
+              </div>`;
+            })}
+          </section>`)}`}
+    </div>`;
+  },
+};
