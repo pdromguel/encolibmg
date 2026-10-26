@@ -239,3 +239,23 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then SetUp();
 end;
+
+{ PyTorch has very deep folders: in a deep install folder some paths pass Windows' 260-character limit and the
+  normal uninstall can't delete them. rd with the \\?\ prefix can. Only the program's own folders are touched. }
+procedure RemoveLongPathDir(const Dir: String);
+var
+  Code: Integer;
+begin
+  if DirExists(Dir) then
+    Exec(ExpandConstant('{cmd}'), '/S /C "rd /s /q "\\?\' + Dir + '""', '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then begin
+    RemoveLongPathDir(ExpandConstant('{app}\python'));
+    RemoveLongPathDir(ExpandConstant('{app}\ffmpeg'));
+    RemoveLongPathDir(ExpandConstant('{app}\app'));
+    RemoveDir(ExpandConstant('{app}'));  { only if nothing else is left in it }
+  end;
+end;
