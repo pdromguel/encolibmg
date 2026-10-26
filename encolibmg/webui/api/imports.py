@@ -6,9 +6,9 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from encolibmg import importer
-from encolibmg.i18n import t as tr
-from encolibmg.webui import views
+from encolibmg.library import importer
+from encolibmg.core.i18n import t as tr
+from encolibmg.webui import serialize
 from encolibmg.webui.api.core import ApiCore, api, step_text
 
 
@@ -22,7 +22,7 @@ class ImportApi(ApiCore):
         return super()._extra_roots() + ([self._import_tmp] if self._import_tmp else [])
 
     def _items_out(self) -> list[dict]:
-        return [views.import_dict(it, n) for n, it in enumerate(self._items)]
+        return [serialize.import_dict(it, n) for n, it in enumerate(self._items)]
 
     @api
     def import_pick(self):

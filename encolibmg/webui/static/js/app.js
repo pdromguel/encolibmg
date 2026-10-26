@@ -4,10 +4,10 @@ import { html, render } from "../vendor/lit-html.js";
 import { call, on, tryCall } from "./api.js";
 import { loadBrand } from "./fx/elements.js";
 import { fmtTime } from "./fx/core.js";
-import { pixelWipe } from "./fx/overlay.js";
+import { pixelWipe } from "./fx/effects.js";
 import { player } from "./player.js";
 import { set, state, subscribe } from "./store.js";
-import { closeMenu, menu, modal, modalOpen, promptDialog } from "./ui/overlay.js";
+import { closeMenu, menu, modal, modalOpen, promptDialog } from "./ui/dialogs.js";
 import { toast } from "./ui/toast.js";
 import { screens, NAV } from "./views/index.js";
 import { setCatalog, t, tt } from "./i18n.js";
@@ -241,6 +241,6 @@ addEventListener("keydown", e => {
   toast(t("ui.boot.failed"), { kind: "bad", detail: String(e.message || e) });
 });
 
-// dev/test hook (used by scripts/snap_app.py to drive screens)
+// dev/test hook (used by scripts/screenshots/ and tests/ui/ to drive screens)
 import * as storeModule from "./store.js";
-window.__encolib = { store: storeModule, go, refresh, player, setLanguage };
+window.__encolib = { store: storeModule, go, refresh, player, setLanguage, t };

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from encolibmg import i18n
+from encolibmg.core import i18n
 
 ROOT = Path(__file__).resolve().parent.parent
 PKG = ROOT / "encolibmg"
@@ -15,7 +15,7 @@ PARAM = re.compile(r"\{(\w+)\}")
 
 
 def load(lang):
-    return json.loads((PKG / "locales" / f"{lang}.json").read_text(encoding="utf-8"))
+    return json.loads((PKG / "core" / "locales" / f"{lang}.json").read_text(encoding="utf-8"))
 
 
 def test_catalogs_have_the_same_keys_and_params():

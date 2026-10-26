@@ -1,12 +1,12 @@
 import logging
 import sys
 
-from encolibmg.paths import setup_logging
+from encolibmg.core.paths import setup_logging
 
 
 def _fatal(detail: str):
     """No web UI (WebView2 missing or broken): explain it in a native message box, then quit."""
-    from encolibmg.i18n import t
+    from encolibmg.core.i18n import t
 
     text = t("err.webview_missing", detail=detail)
     try:
@@ -20,8 +20,8 @@ def _fatal(detail: str):
 
 def main():
     setup_logging()
-    from encolibmg import i18n
-    from encolibmg.paths import load_config
+    from encolibmg.core import i18n
+    from encolibmg.core.paths import load_config
 
     i18n.set_language(load_config().get("language", "auto"))
     try:

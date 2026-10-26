@@ -18,7 +18,7 @@ import mido
 from encolibmg.guide.align import Word
 from encolibmg.guide.melody import Note
 from encolibmg.guide.romanize import furigana, script_of
-from encolibmg.i18n import t
+from encolibmg.core.i18n import t
 
 PPQ = 480
 TEMPO = 500_000           # µs per beat = 120 BPM

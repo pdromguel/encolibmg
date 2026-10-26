@@ -7,10 +7,10 @@ import json
 import logging
 from pathlib import Path
 
-from encolibmg import i18n
-from encolibmg.i18n import t as tr
+from encolibmg.core import i18n
+from encolibmg.core.i18n import t as tr
 from encolibmg.library import Library, LibraryError, Track
-from encolibmg.paths import load_config, save_config
+from encolibmg.core.paths import load_config, save_config
 
 log = logging.getLogger("encolibmg.webui.api")
 
@@ -121,6 +121,3 @@ class ApiCore:
     def _url(self, p: Path | None) -> str | None:
         return self._server.media_url(p) if p else None
 
-    @staticmethod
-    def _multiplex(t: Track) -> Path | None:
-        return next((f for f in t.files if ".multiplexed." in f.name.lower()), None)

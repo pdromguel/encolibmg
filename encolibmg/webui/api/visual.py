@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from encolibmg import soundfont, visual, youtube
-from encolibmg.i18n import t as tr
-from encolibmg.webui import views
+from encolibmg.library import soundfont, visual
+from encolibmg import youtube
+from encolibmg.core.i18n import t as tr
+from encolibmg.webui import serialize
 from encolibmg.webui.api.core import ApiCore, api
 
 VIDEO_TYPES = "*.mp4;*.mkv;*.webm;*.avi;*.mov;*.wmv;*.m4v"
@@ -58,7 +59,7 @@ class VisualApi(ApiCore):
     def bgv_search(self, query: str):
         vids = youtube.search(query, n=15)
         self._videos.update({v.id: v for v in vids})
-        return [views.video_dict(v) for v in vids]
+        return [serialize.video_dict(v) for v in vids]
 
     @api
     def bgv_add_video(self, category: str, video_id: str):

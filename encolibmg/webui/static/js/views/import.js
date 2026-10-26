@@ -1,9 +1,9 @@
-// Importar: pick a folder (CDs, CDG packs, .zip, .kar), preview with inline-editable names, import.
+// Import: pick a folder (CDs, CDG packs, .zip, .kar), preview with inline-editable names, import.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob, tryCall } from "../api.js";
 import { refresh } from "../app.js";
-import { confetti } from "../fx/overlay.js";
+import { confetti } from "../fx/effects.js";
 import { setView, state, view } from "../store.js";
 import { toast } from "../ui/toast.js";
 import { t, tt } from "../i18n.js";

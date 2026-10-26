@@ -15,8 +15,9 @@ from collections import deque
 from pathlib import Path
 from threading import Event
 
-from encolibmg.errors import Cancelled
-from encolibmg.i18n import t
+from encolibmg.audio.ffmpeg import NO_WINDOW
+from encolibmg.core.errors import Cancelled
+from encolibmg.core.i18n import t
 
 MODEL = "htdemucs_ft"
 SHIFTS = 2
@@ -49,7 +50,7 @@ def separate(wav: Path, work_dir: Path, cancel: Event | None = None, on_progress
     overall = _Overall(BAG_SIZE.get(model, 1) * max(1, shifts))
     proc = subprocess.Popen(
         cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        creationflags=NO_WINDOW,
     )
     if cancel is not None:
         def watch():

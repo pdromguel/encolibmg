@@ -76,7 +76,7 @@ def test_rename_and_remove(api, monkeypatch):
     (lib_path(api) / "a - b.mp4").write_bytes(b"")
     t = api.track_rename("a - b", "Queen", "Love")["data"]
     assert t["base"] == "Queen - Love"
-    monkeypatch.setattr("encolibmg.library.send2trash", lambda p: __import__("os").remove(p))
+    monkeypatch.setattr("encolibmg.library.model.send2trash", lambda p: __import__("os").remove(p))
     assert api.track_remove(["Queen - Love"])["data"] == 1
     assert api.tracks()["data"] == []
     assert api.track_rename("nada", "x", "y")["kind"] == "KeyError"

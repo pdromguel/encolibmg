@@ -14,7 +14,7 @@ def portuguese(monkeypatch):
     "auto" (the default setting, applied when Api starts) follows the Windows language, so it is pinned too:
     otherwise the tests would depend on the machine (CI runners are in English).
     """
-    from encolibmg import i18n
+    from encolibmg.core import i18n
 
     monkeypatch.setattr(i18n, "detect_language", lambda: "pt-BR")
     i18n.set_language("pt-BR")

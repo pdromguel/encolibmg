@@ -4,19 +4,17 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from encolibmg.i18n import t
+
+from encolibmg.audio import ffmpeg
+from encolibmg.audio.ffmpeg import NO_WINDOW
 
 # formats Encore ignores that we know how to convert
 UNSUPPORTED_AUDIO = {".flac", ".wma", ".aac", ".opus", ".aiff", ".aif", ".ape", ".mka", ".wv"}
 UNSUPPORTED_VIDEO = {".mov", ".wmv", ".m4v", ".mpg", ".mpeg", ".flv", ".ts", ".vob", ".3gp"}
-_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 def _ffmpeg(args: list[str], name: str) -> None:
-    proc = subprocess.run(["ffmpeg", "-v", "error", "-y", *args], capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", creationflags=_NO_WINDOW)
-    if proc.returncode != 0:
-        raise RuntimeError(t("err.ffmpeg_convert", name=name, detail=proc.stderr[-1500:]))
+    ffmpeg.run(args, "err.ffmpeg_convert", detail_chars=1500, name=name)
 
 
 def convert_audio(src: Path, dest_mp3: Path) -> Path:
@@ -34,7 +32,7 @@ def convert_video(src: Path, dest_mp4: Path) -> Path:
 
 def duration(path: Path) -> float | None:
     proc = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
-                           str(path)], capture_output=True, text=True, creationflags=_NO_WINDOW)
+                           str(path)], capture_output=True, text=True, creationflags=NO_WINDOW)
     try:
         return float(proc.stdout.strip())
     except ValueError:

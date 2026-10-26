@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Callable
 
-from encolibmg.paths import app_dir
+from encolibmg.core.paths import app_dir
 from encolibmg.webui.api import Api
 from encolibmg.webui.jobs import JobManager
 from encolibmg.webui.server import UIServer

@@ -3,9 +3,9 @@ import subprocess
 
 import pytest
 
-from encolibmg import visual
+from encolibmg.library import visual
 from encolibmg.library import Library
-from encolibmg.manifest import read_manifest
+from encolibmg.library.manifest import read_manifest
 from encolibmg.youtube import VideoCandidate
 
 

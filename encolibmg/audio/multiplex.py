@@ -4,21 +4,13 @@ Encore starts playback panned fully left (multiplexPan = -1) and the UI
 labels left/right as Instrumental/Vocal, so: left = instrumental, right = vocals.
 """
 
-import subprocess
 from pathlib import Path
 
-from encolibmg.audio import loudness
-from encolibmg.i18n import t
-
-FFMPEG = "ffmpeg"
-_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+from encolibmg.audio import ffmpeg, loudness
 
 
 def _ffmpeg(cmd: list[str], err_key: str) -> None:
-    proc = subprocess.run([FFMPEG, "-v", "error", "-y", *cmd], capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", creationflags=_NO_WINDOW)
-    if proc.returncode != 0:
-        raise RuntimeError(t(err_key, detail=proc.stderr[-2000:]))
+    ffmpeg.run(cmd, err_key)
 
 
 def make_multiplex(instrumental: Path, vocals: Path, dest: Path, normalize: bool = True) -> Path:

@@ -2,6 +2,17 @@
 
 All notable changes to EncoLibMG. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Renamed launchers:** `instalar.bat` → `install.bat`, `Abrir EncoLibMG.bat` → `EncoLibMG.bat`.
+- New front page with an animated demo and screenshots of every screen (from a demo library of invented songs);
+  a [user guide](docs/user-guide.md), [architecture](docs/architecture.md), [Encore file format](docs/encore-format.md)
+  and an English [roadmap](docs/roadmap.md). The original Portuguese work notes moved to `docs/history/`.
+- Code reorganized: `encolibmg/core/` (paths, errors, files, translations) and `encolibmg/library/` (everything
+  that reads or writes the library folder); scripts grouped in `scripts/i18n/`, `scripts/brand/` and
+  `scripts/screenshots/`; one shared ffmpeg runner; unused code and vendored files removed.
+
 ## [0.9.0] — 2026-10-25
 
 First public release.

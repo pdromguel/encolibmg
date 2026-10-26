@@ -11,11 +11,11 @@ import numpy as np
 from encolibmg.audio.convert import duration as media_duration
 from encolibmg.audio.decode import decode_mono
 from encolibmg.guide.midi import read_guide
-from encolibmg.i18n import t as tr
+from encolibmg.core.i18n import t as tr
 from encolibmg.library import AUDIO_EXTS, VIDEO_EXTS
 from encolibmg.lyrics.match import read_lrc
 from encolibmg.lyrics.sync import Line, format_lrc, parse_lrc, vocal_onset
-from encolibmg.paths import backup_file, latest_backup
+from encolibmg.core.paths import backup_file, latest_backup
 from encolibmg.webui.api.core import ApiCore, api
 
 WAVE_SR = 8000      # the waveform only needs the envelope: mono 8 kHz is plenty
@@ -63,7 +63,7 @@ class SyncApi(ApiCore):
         lrc = t.file_with({".lrc"})
         if lrc is None:
             raise ValueError(tr("err.no_lrc"))
-        mp = self._multiplex(t)
+        mp = t.multiplex_file
         audio = mp or t.file_with(AUDIO_EXTS) or t.file_with(VIDEO_EXTS)
         info = self._peaks_for(audio, 1 if mp else -1)  # Multiplex: the right channel is the vocals
         return {"base": t.base, "artist": t.artist, "title": t.title, "audio": self._url(audio),
@@ -98,7 +98,7 @@ class SyncApi(ApiCore):
         if gpath is None:
             raise LookupError(tr("err.no_guide"))
         g = read_guide(gpath)
-        mp = self._multiplex(t)
+        mp = t.multiplex_file
         audio = mp or t.file_with(AUDIO_EXTS)
         return {"base": t.base, "artist": t.artist, "title": t.title, "audio": self._url(audio),
                 "multiplexed": bool(mp), "duration": media_duration(audio) if audio else None,

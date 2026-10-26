@@ -9,8 +9,8 @@ from threading import Event
 
 from yt_dlp import YoutubeDL
 
-from encolibmg.errors import Cancelled
-from encolibmg.i18n import t
+from encolibmg.core.errors import Cancelled
+from encolibmg.core.i18n import t
 
 MAX_DURATION_DIFF = 8.0
 UNWANTED = ["karaoke", "instrumental", "cover", "live", "ao vivo", "8d", "slowed",

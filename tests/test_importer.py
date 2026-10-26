@@ -3,11 +3,11 @@ import zipfile
 
 import pytest
 
-from encolibmg import importer
-from encolibmg.importer import clean_title, import_item, infer_name, mark_existing, scan_source
+from encolibmg.library import importer
+from encolibmg.library.importer import clean_title, import_item, infer_name, mark_existing, scan_source
 from encolibmg.library import Library
 from encolibmg.lyrics.lrclib import LyricsCandidate
-from encolibmg.tags import write_tags
+from encolibmg.library.tags import write_tags
 
 
 def sine(path, seconds=2):
@@ -150,8 +150,8 @@ def test_duplicates_inside_source_are_flagged(lib, tmp_path):
 
 
 def test_status_text_in_both_languages():
-    from encolibmg import i18n
-    from encolibmg.importer import status_text
+    from encolibmg.core import i18n
+    from encolibmg.library.importer import status_text
 
     assert status_text("imported:cdg") == "importada (Áudio + CDG)"
     assert status_text("exists") == "já existe"

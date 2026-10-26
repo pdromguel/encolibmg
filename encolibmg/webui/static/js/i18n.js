@@ -1,4 +1,4 @@
-// UI translations. The catalog comes from Python (encolibmg/locales/*.json) so both sides share one source.
+// UI translations. The catalog comes from Python (encolibmg/core/locales/*.json) so both sides share one source.
 import { html } from "../vendor/lit-html.js";
 
 let catalog = {}, lang = "en";

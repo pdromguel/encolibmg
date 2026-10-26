@@ -47,7 +47,7 @@ import { retime } from "../../encolibmg/webui/static/js/fx/core.js";
 const L = [{ ms: 1000, text: "a" }, { ms: 5000, text: "b" }, { ms: 9000, text: "c" }, { ms: 13000, text: "d" }];
 const ms = r => r.map(x => x.ms);
 
-test("retime matches Python apply_anchors", () => {
+test("retime: offset, anchors, extrapolation, edge cases", () => {
   assert.deepEqual(ms(retime(L, {})), [1000, 5000, 9000, 13000]);
   assert.deepEqual(ms(retime(L, { 1: 5600 })), [1600, 5600, 9600, 13600]);
   assert.deepEqual(ms(retime(L, { 1: 5500, 2: 10300 })), [700, 5500, 10300, 15100]);
@@ -56,4 +56,6 @@ test("retime matches Python apply_anchors", () => {
   const same = [{ ms: 1000, text: "a" }, { ms: 1000, text: "a2" }, { ms: 4000, text: "b" }];
   assert.deepEqual(ms(retime(same, { 0: 1500, 1: 1500 })), [1500, 1500, 4500]);
   assert.deepEqual(retime(L, { 2: 9500 }, -200).map(r => r.i), [0, 1, 2, 3]);
+  assert.deepEqual(retime([], {}), []);
+  assert.deepEqual(ms(retime([{ ms: 1000, text: "x" }], { 0: 3000 })), [3000]);
 });

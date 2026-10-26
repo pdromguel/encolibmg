@@ -1,4 +1,4 @@
-// Sincronia: vocal waveform in pixels (overview + 12 s zoom) with the lyric lines on top, shift/anchors, save.
+// Sync: vocal waveform in pixels (overview + 12 s zoom) with the lyric lines on top, shift/anchors, save.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob, tryCall } from "../api.js";
@@ -7,7 +7,7 @@ import { clamp, fmtTime, fmtTimePrecise, retime } from "../fx/core.js";
 import { colors, reducedMotion } from "../fx/elements.js";
 import { player } from "../player.js";
 import { setView, state, view } from "../store.js";
-import { confirmDialog } from "../ui/overlay.js";
+import { confirmDialog } from "../ui/dialogs.js";
 import { toast } from "../ui/toast.js";
 // `t` is a time in this file, so the translator is imported as `tr`
 import { fixed, t as tr, tt } from "../i18n.js";

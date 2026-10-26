@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from encolibmg.errors import Cancelled
+from encolibmg.core.errors import Cancelled
 from encolibmg.webui.jobs import Busy, JobManager
 
 

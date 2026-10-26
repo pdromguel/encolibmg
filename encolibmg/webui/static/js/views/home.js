@@ -1,7 +1,7 @@
-// Início: pixel field + assembling wordmark, big search, library numbers, recently added.
+// Home: pixel field + assembling wordmark, big search, library numbers, recently added.
 import { html } from "../../vendor/lit-html.js";
 import { go } from "../app.js";
-import { typePlaceholder } from "../fx/overlay.js";
+import { typePlaceholder } from "../fx/effects.js";
 import { setView } from "../store.js";
 import { t, tt } from "../i18n.js";
 import { badgeText, noLibrary } from "./common.js";

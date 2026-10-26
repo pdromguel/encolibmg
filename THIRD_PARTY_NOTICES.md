@@ -10,7 +10,7 @@ It bundles, depends on or downloads the components below. Each keeps its own lic
 | [lit-html](https://github.com/lit/lit) 3.3.3 | `encolibmg/webui/static/vendor/` | BSD-3-Clause ([text](encolibmg/webui/static/vendor/lit-html.LICENSE)) |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (variable, latin + latin-ext) | `encolibmg/webui/static/fonts/` | SIL Open Font License 1.1 ([text](encolibmg/webui/static/fonts/OFL.txt)) |
 
-## Python dependencies (installed by `instalar.bat`, not bundled)
+## Python dependencies (installed by `install.bat`, not bundled)
 
 | Package | License |
 |---|---|

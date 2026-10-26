@@ -1,11 +1,11 @@
-// Biblioteca: virtualized track list with filters, multi-select bulk actions and a side panel per track.
+// Library: virtualized track list with filters, multi-select bulk actions and a side panel per track.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob, tryCall } from "../api.js";
 import { go, refresh } from "../app.js";
 import { player } from "../player.js";
 import { schedule, setView, state, view } from "../store.js";
-import { confirmDialog, promptDialog } from "../ui/overlay.js";
+import { confirmDialog, promptDialog } from "../ui/dialogs.js";
 import { toast } from "../ui/toast.js";
 import { pickVideo } from "./add.js";
 // note: `t` is a track all over this file, so the translator is imported as `tr`

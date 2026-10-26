@@ -14,14 +14,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from mutagen.id3 import ID3, TXXX, ID3NoHeaderError
-from encolibmg.i18n import t
+
+from encolibmg.audio.ffmpeg import NO_WINDOW
+from encolibmg.core.i18n import t
 
 TARGET = -16.0
 MAX_TP = -1.0
 TOLERANCE = 1.5
 MARK_KEY = "EncoreLM-Loudness"
 MARK = f"{MARK_KEY}={TARGET:g}"
-_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 # container -> audio codec args when re-encoding
 _AUDIO_CODEC = {
@@ -45,7 +46,7 @@ class Loudness:
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                          creationflags=_NO_WINDOW)
+                          creationflags=NO_WINDOW)
 
 
 def measure(path: Path) -> Loudness:

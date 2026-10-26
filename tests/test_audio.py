@@ -5,7 +5,7 @@ import pytest
 import soundfile as sf
 
 from encolibmg.audio.multiplex import make_multiplex
-from encolibmg.tags import write_tags
+from encolibmg.library.tags import write_tags
 
 
 def tone(path, freq, seconds=2, stereo=True, sr=44100):

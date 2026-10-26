@@ -1,9 +1,9 @@
-// Visual e som: background videos by category, idle-screen images, boot video, score narrations, SoundFont.
+// Look & sound: background videos by category, idle-screen images, boot video, score narrations, SoundFont.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob, tryCall } from "../api.js";
 import { setView, state, view } from "../store.js";
-import { confirmDialog, modal, promptDialog } from "../ui/overlay.js";
+import { confirmDialog, modal, promptDialog } from "../ui/dialogs.js";
 import { toast } from "../ui/toast.js";
 import { pickVideo } from "./add.js";
 import { t, tt } from "../i18n.js";

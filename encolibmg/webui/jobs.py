@@ -8,8 +8,8 @@ import threading
 import time
 from typing import Any, Callable
 
-from encolibmg.errors import Cancelled
-from encolibmg.i18n import t
+from encolibmg.core.errors import Cancelled
+from encolibmg.core.i18n import t
 
 log = logging.getLogger(__name__)
 MIN_INTERVAL = 0.05  # s between progress events (≤ 20/s)

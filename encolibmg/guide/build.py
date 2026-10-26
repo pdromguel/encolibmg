@@ -8,15 +8,15 @@ from functools import lru_cache
 from threading import Event
 
 from encolibmg.audio.decode import SR, decode
-from encolibmg.errors import Cancelled
+from encolibmg.core.errors import Cancelled
 from encolibmg.guide.align import MMSAligner, align_lyrics, line_windows
 from encolibmg.guide.melody import detect_notes
 from encolibmg.guide.midi import write_guide
 from encolibmg.library import Library, Track
 from encolibmg.lyrics.match import read_lrc
 from encolibmg.lyrics.sync import parse_lrc
-from encolibmg.paths import backup_file
-from encolibmg.i18n import t
+from encolibmg.core.paths import backup_file
+from encolibmg.core.i18n import t
 
 log = logging.getLogger(__name__)
 NOTE_WINDOW_PAD = 0.5  # s around each lyric line where melody notes are kept
@@ -35,7 +35,7 @@ def build_guide(lib: Library, track: Track, on_progress=None, cancel: Event | No
                 aligner=None, f0_fn=None) -> tuple[Track, dict]:
     """Returns the refreshed track and alignment stats {'aligned', 'fallback', 'notes'}."""
     progress = on_progress or (lambda step, frac=None: None)
-    mp3 = next((f for f in track.files if ".multiplexed." in f.name.lower()), None)
+    mp3 = track.multiplex_file
     lrc = track.file_with({".lrc"})
     if mp3 is None or lrc is None:
         raise ValueError(t("err.guide_needs_multiplex"))

@@ -2,11 +2,11 @@ import json
 
 import mido
 
-from encolibmg import checker
-from encolibmg.importer import infer_name
+from encolibmg.library import checker
+from encolibmg.library.importer import infer_name
 from encolibmg.library import Library
-from encolibmg.manifest import FLAGS, ensure_additional, flag_value, set_flag
-from encolibmg.midi_info import decode_text, midi_has_lyrics, midi_names
+from encolibmg.library.manifest import FLAGS, ensure_additional, flag_value, set_flag
+from encolibmg.library.midi_info import decode_text, midi_has_lyrics, midi_names
 
 
 def kar(path, texts: list[bytes], kind="text"):

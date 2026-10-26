@@ -1,12 +1,12 @@
-// Adicionar: search synced lyrics → download complete track (Multiplex + LRC + guide) or a karaoke MTV.
+// Add: search synced lyrics → download complete track (Multiplex + LRC + guide) or a karaoke MTV.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob, tryCall } from "../api.js";
 import { go, refresh } from "../app.js";
 import { fmtTime } from "../fx/core.js";
-import { confetti } from "../fx/overlay.js";
+import { confetti } from "../fx/effects.js";
 import { setView, state, view } from "../store.js";
-import { modal } from "../ui/overlay.js";
+import { modal } from "../ui/dialogs.js";
 import { toast } from "../ui/toast.js";
 import { t } from "../i18n.js";
 import { noLibrary, pageHead } from "./common.js";

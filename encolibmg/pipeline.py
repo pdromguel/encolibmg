@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import subprocess
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -19,16 +18,17 @@ from typing import Callable
 from send2trash import send2trash
 
 from encolibmg import youtube
+from encolibmg.audio import ffmpeg
 from encolibmg.audio.multiplex import make_multiplex
 from encolibmg.audio.separate import separate
-from encolibmg.errors import AlreadyExists, Cancelled, NoAudioMatch
+from encolibmg.core.errors import AlreadyExists, Cancelled, NoAudioMatch
 from encolibmg.guide.build import build_guide
 from encolibmg.library import AUDIO_EXTS, Library, Track, base_name
 from encolibmg.lyrics.lrclib import LyricsCandidate
 from encolibmg.lyrics.match import read_lrc
 from encolibmg.lyrics.normalize import normalize_lrc
-from encolibmg.tags import write_tags
-from encolibmg.i18n import t
+from encolibmg.library.tags import write_tags
+from encolibmg.core.i18n import t
 
 log = logging.getLogger(__name__)
 Progress = Callable[[str, "float | None"], None]
@@ -128,11 +128,8 @@ def _build_multiplex(tmp: Path, wav: Path, base: str, artist: str, title: str, l
 
 def _decode_wav(src: Path, tmp: Path) -> Path:
     wav = tmp / "source.wav"
-    proc = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-map", "0:a:0", "-c:a", "pcm_s16le",
-                           str(wav)], capture_output=True, text=True, encoding="utf-8", errors="replace",
-                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    if proc.returncode != 0:
-        raise RuntimeError(t("err.read_audio", name=src.name, detail=proc.stderr[-800:]))
+    ffmpeg.run(["-i", str(src), "-map", "0:a:0", "-c:a", "pcm_s16le", str(wav)], "err.read_audio",
+               detail_chars=800, name=src.name)
     return wav
 
 
@@ -154,7 +151,7 @@ def track_from_local(lib: Library, audio: Path, artist: str, title: str, lrc_tex
 
 def convert_to_multiplex(lib: Library, track: Track, on_progress: Progress = _noop,
                          cancel: Event | None = None, make_guide: bool = True) -> Track:
-    """'Áudio + LRC' → 'Multiplex + LRC' in place; the old audio goes to the Recycle Bin."""
+    """'Audio + LRC' → 'Multiplex + LRC' in place; the old audio goes to the Recycle Bin."""
     audio = next((f for f in track.files if f.suffix.lower() in AUDIO_EXTS
                   and ".multiplexed." not in f.name.lower()), None)
     lrc = track.file_with({".lrc"})
@@ -163,7 +160,7 @@ def convert_to_multiplex(lib: Library, track: Track, on_progress: Progress = _no
     with _workdir(lib) as tmp:
         on_progress("step.read_audio", None)
         wav = _decode_wav(audio, tmp)
-        mp3, new_lrc = _build_multiplex(tmp, wav, track.base, track.artist, track.title,
+        mp3, _ = _build_multiplex(tmp, wav, track.base, track.artist, track.title,
                                         normalize_lrc(read_lrc(lrc)), on_progress, cancel)
         on_progress("step.save", None)
         send2trash(str(audio))

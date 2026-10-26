@@ -2,7 +2,7 @@ import subprocess
 
 import pytest
 
-from encolibmg import checker
+from encolibmg.library import checker
 from encolibmg.library import Library
 from encolibmg.lyrics.lrclib import LyricsCandidate
 
@@ -23,7 +23,7 @@ def kinds(issues):
 
 
 def test_clean_library_has_no_issues(lib):
-    from encolibmg.tags import write_tags
+    from encolibmg.library.tags import write_tags
 
     write_tags(sine(lib.path / "A - B.multiplexed.mp3"), "A", "B")
     (lib.path / "A - B.lrc").write_text("[00:01.00] oi\n", encoding="utf-8")

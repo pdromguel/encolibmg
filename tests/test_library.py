@@ -88,7 +88,7 @@ def test_exists_case_insensitive(tmp_path):
 
 def test_remove_deletes_all_files(tmp_path, monkeypatch):
     removed = []
-    monkeypatch.setattr("encolibmg.library.send2trash", lambda p: removed.append(p))
+    monkeypatch.setattr("encolibmg.library.model.send2trash", lambda p: removed.append(p))
     lib = Library.create(tmp_path / "lib", "x")
     _touch(lib.path, "A - B.multiplexed.mp3", "A - B.lrc", "C - D.mp4")
     track = next(t for t in lib.scan() if t.base == "A - B")
@@ -118,7 +118,7 @@ def test_rename_track_renames_siblings_and_tags(tmp_path):
 
 
 def test_rename_track_collision(tmp_path):
-    from encolibmg.errors import AlreadyExists
+    from encolibmg.core.errors import AlreadyExists
 
     lib = Library.create(tmp_path / "lib", "x")
     _touch(lib.path, "A - B.mp4", "C - D.mp4")
@@ -138,7 +138,7 @@ def test_kind_label_with_clip(tmp_path):
 
 
 def test_manifest_preserves_unknown_keys(tmp_path):
-    from encolibmg.manifest import read_manifest, write_manifest
+    from encolibmg.library.manifest import read_manifest, write_manifest
 
     lib = Library.create(tmp_path / "lib", "x")
     data = read_manifest(lib.path)
@@ -155,7 +155,7 @@ def test_manifest_preserves_unknown_keys(tmp_path):
 
 
 def test_app_dir_migrates_old_name(tmp_path, monkeypatch):
-    from encolibmg.paths import app_dir
+    from encolibmg.core.paths import app_dir
 
     monkeypatch.setenv("APPDATA", str(tmp_path / "ad"))
     old = tmp_path / "ad" / "EncoreLibraryManager"

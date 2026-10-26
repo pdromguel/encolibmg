@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from encolibmg import checker
-from encolibmg.i18n import t as tr
-from encolibmg.webui import views
+from encolibmg.library import checker
+from encolibmg.core.i18n import t as tr
+from encolibmg.webui import serialize
 from encolibmg.webui.api.core import ApiCore, api
 
 
@@ -20,7 +20,7 @@ class CheckApi(ApiCore):
         def work(progress, cancel):
             progress("step.check", None)
             self._issues = checker.check(lib, include_loudness=loudness, cancel=cancel, on_progress=progress)
-            return [views.issue_dict(i, n, lib) for n, i in enumerate(self._issues)]
+            return [serialize.issue_dict(i, n, lib) for n, i in enumerate(self._issues)]
         return self._job(tr("job.check"), work, "check")
 
     @api

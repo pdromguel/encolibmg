@@ -3,7 +3,8 @@ import subprocess
 import numpy as np
 import pytest
 
-from encolibmg import checker, pipeline
+from encolibmg.library import checker
+from encolibmg import pipeline
 from encolibmg.guide import build
 from encolibmg.guide.midi import read_guide
 from encolibmg.library import Library, kind_label

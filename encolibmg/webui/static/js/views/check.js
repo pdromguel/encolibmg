@@ -1,9 +1,9 @@
-// Verificar: finds what Encore would ignore or show wrong; groups by problem; fixes selected or everything.
+// Check: finds what Encore would ignore or show wrong; groups by problem; fixes selected or everything.
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { runJob } from "../api.js";
 import { refresh } from "../app.js";
-import { confetti } from "../fx/overlay.js";
+import { confetti } from "../fx/effects.js";
 import { setView, state, view } from "../store.js";
 import { toast } from "../ui/toast.js";
 import { t, tt } from "../i18n.js";

@@ -5,14 +5,15 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from encolibmg import __version__, i18n, pipeline
+from encolibmg import __version__, pipeline
+from encolibmg.core import i18n
 from encolibmg.audio.convert import duration as media_duration
 from encolibmg.guide.build import build_guide
-from encolibmg.i18n import t as tr
+from encolibmg.core.i18n import t as tr
 from encolibmg.library import AUDIO_EXTS, VIDEO_EXTS, Library, inside
-from encolibmg.manifest import FLAGS, ensure_additional, flag_value, read_manifest, set_flag, write_manifest
-from encolibmg.paths import load_config, save_config
-from encolibmg.webui import views
+from encolibmg.library.manifest import FLAGS, ensure_additional, flag_value, read_manifest, set_flag, write_manifest
+from encolibmg.core.paths import load_config, save_config
+from encolibmg.webui import serialize
 from encolibmg.webui.api.core import ApiCore, api, step_text
 
 
@@ -41,7 +42,7 @@ class LibraryApi(ApiCore):
         tracks = lib.scan() if lib else []
         return {"version": __version__, "job": self._jobs.snapshot(),
                 "library": {"path": str(lib.path), "title": lib.title} if lib else None,
-                "stats": views.stats(tracks)}
+                "stats": serialize.stats(tracks)}
 
     @api
     def library_pick(self):
@@ -66,7 +67,7 @@ class LibraryApi(ApiCore):
 
     @api
     def tracks(self):
-        return [views.track_dict(t) for t in self._need().scan()]
+        return [serialize.track_dict(t) for t in self._need().scan()]
 
     @api
     def open_folder(self, rel: str = ""):
@@ -98,7 +99,7 @@ class LibraryApi(ApiCore):
     def track_rename(self, base: str, artist: str, title: str):
         t = self._need().rename_track(self._track(base), artist, title)
         self._emit("library", {})
-        return views.track_dict(t)
+        return serialize.track_dict(t)
 
     @api
     def track_remove(self, bases: list[str]):
@@ -111,7 +112,7 @@ class LibraryApi(ApiCore):
     @api
     def track_convert(self, base: str):
         lib, t = self._need(), self._track(base)
-        return self._job(tr("job.multiplex", base=t.base), lambda p, c: views.track_dict(
+        return self._job(tr("job.multiplex", base=t.base), lambda p, c: serialize.track_dict(
             pipeline.convert_to_multiplex(lib, t, p, c)))
 
     @api
@@ -140,19 +141,19 @@ class LibraryApi(ApiCore):
         dur = media_duration(audio) if audio else None
         vids = pipeline.find_clip(t.artist, t.title)
         self._videos.update({v.id: v for v in vids})
-        return {"duration": dur, "videos": [views.video_dict(v, dur) for v in vids]}
+        return {"duration": dur, "videos": [serialize.video_dict(v, dur) for v in vids]}
 
     @api
     def add_clip(self, base: str, video_id: str):
         lib, t, v = self._need(), self._track(base), self._videos[video_id]
-        return self._job(tr("job.clip", base=t.base), lambda p, c: views.track_dict(pipeline.add_clip(lib, t, v, p, c)))
+        return self._job(tr("job.clip", base=t.base), lambda p, c: serialize.track_dict(pipeline.add_clip(lib, t, v, p, c)))
 
     @api
     def media(self, base: str, which: str = "audio"):
         t = self._track(base)
         if which == "video":
             return self._url(t.file_with(VIDEO_EXTS))
-        return self._url(self._multiplex(t) or t.file_with(AUDIO_EXTS) or t.file_with(VIDEO_EXTS))
+        return self._url(t.multiplex_file or t.file_with(AUDIO_EXTS) or t.file_with(VIDEO_EXTS))
 
     # --- settings ---------------------------------------------------------------------------------------
     @api

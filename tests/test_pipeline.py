@@ -3,7 +3,7 @@ from threading import Event
 import pytest
 
 from encolibmg import pipeline
-from encolibmg.errors import AlreadyExists, Cancelled, NoAudioMatch
+from encolibmg.core.errors import AlreadyExists, Cancelled, NoAudioMatch
 from encolibmg.library import Library
 from encolibmg.lyrics.lrclib import LyricsCandidate
 from encolibmg.youtube import VideoCandidate

@@ -1,0 +1,24 @@
+[project]
+name = "encolibmg"
+description = "Builds and organizes a karaoke library for Encore Karaoke: synced lyrics, vocal-split Multiplex tracks and MIDI guides."
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.12"
+dynamic = ["version"]
+# Dependencies live in requirements.txt: PyTorch comes from its own index (CUDA or CPU), see install.bat.
+
+[project.urls]
+Homepage = "https://github.com/pdromguel/encolibmg"
+Changelog = "https://github.com/pdromguel/encolibmg/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = { attr = "encolibmg.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "slow: runs the real models / network (pytest -m slow)",
+    "ui: opens the real window on a generated library (pytest -m ui)",
+]
+addopts = '-m "not slow and not ui"'

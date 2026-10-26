@@ -2,10 +2,10 @@ from threading import Event
 
 import pytest
 
-from encolibmg import soundfont
-from encolibmg.errors import Cancelled
+from encolibmg.library import soundfont
+from encolibmg.core.errors import Cancelled
 from encolibmg.library import Library
-from encolibmg.manifest import read_manifest
+from encolibmg.library.manifest import read_manifest
 
 
 @pytest.fixture
