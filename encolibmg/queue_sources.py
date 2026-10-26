@@ -16,11 +16,14 @@ _DASH = re.compile(r"\s+[-–—]\s+")
 _SUFFIX = re.compile(r"\s+[-–—]\s+(?:(?:\d{4}\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?|radio\s+edit|single\s+version|"
                      r"album\s+version|mono(?:\s+version)?|stereo(?:\s+version)?|original\s+mix)\b.*$", re.I)
 _FEAT = re.compile(r"\s*[\(\[]\s*(?:feat\.?|ft\.?|featuring|with)\s+[^\)\]]*[\)\]]|\s+(?:feat\.?|ft\.?)\s+.*$", re.I)
+# "(Official 4K Video)", "[Lyric Video]", "(Remastered 2009)"… but not "(Who Loves Me)"
+_VIDEO_TAG = re.compile(r"\s*[\(\[][^\)\]]*\b(?:official|video|audio|lyrics?|4k|hd|hq|remaster(?:ed)?|visuali[sz]er|mv)\b"
+                        r"[^\)\]]*[\)\]]", re.I)
 _CHANNEL = re.compile(r"\s*(?:-\s*topic|vevo|official)\s*$", re.I)
 
 
 def tidy_title(title: str) -> str:
-    return clean_title(_FEAT.sub("", _SUFFIX.sub("", title))).strip()
+    return clean_title(_VIDEO_TAG.sub("", _FEAT.sub("", _SUFFIX.sub("", title)))).strip()
 
 
 def split_name(text: str, default_artist: str = "") -> dict:

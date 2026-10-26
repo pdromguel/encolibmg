@@ -22,6 +22,7 @@
  "err.guide_needs_multiplex": "O guia precisa de uma faixa Multiplex com .lrc.",
  "err.has_video": "“{base}” já tem vídeo.",
  "err.image_ext": "Use uma imagem {exts}.",
+ "err.lyrics_unavailable": "O LRCLIB (o site das letras) não respondeu agora ({detail}). Tente de novo daqui a pouco.",
  "err.measure_loudness": "Não consegui medir o volume de {name}:\n{detail}",
  "err.narration_overlap": "Sobrepõe a faixa {min}–{max} já configurada.",
  "err.narration_range": "A faixa de nota vai de 0 a 100, com o mínimo ≤ máximo.",

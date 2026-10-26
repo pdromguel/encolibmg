@@ -9,8 +9,10 @@ The README screenshots use a demo library: python scripts/screenshots/demo_libra
 Uses a temporary %APPDATA% so the real config is never touched. ENCOLIB_LANG=en / pt-BR picks the language.
 """
 
+import atexit
 import json
 import os
+import shutil
 import sys
 import tempfile
 import time
@@ -22,6 +24,7 @@ if "ENCOLIB_TEST_LIB" not in os.environ:
 TEST_LIB = Path(os.environ["ENCOLIB_TEST_LIB"])
 
 appdata = Path(tempfile.mkdtemp(prefix="encolib-appdata-"))
+atexit.register(shutil.rmtree, appdata, ignore_errors=True)  # the WebView2 profile is ~25 MB per run
 os.environ["APPDATA"] = str(appdata)
 (appdata / "EncoLibMG").mkdir()
 (appdata / "EncoLibMG" / "config.json").write_text(json.dumps({"library": str(TEST_LIB), "language": os.environ.get("ENCOLIB_LANG", "auto")}), encoding="utf-8")

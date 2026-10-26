@@ -56,3 +56,10 @@ def test_playlist_entries_uses_channel_as_artist():
 
 def test_split_name_keeps_dashes_in_words():
     assert split_name("Jay-Z - Song") == {"artist": "Jay-Z", "title": "Song"}
+
+
+def test_video_tags_go_but_real_parentheses_stay():
+    assert tidy_title("I Wanna Dance (Who Loves Me) (Official 4K Video)") == "I Wanna Dance (Who Loves Me)"
+    assert tidy_title("Paper Lanterns [Lyric Video]") == "Paper Lanterns"
+    assert tidy_title("Paper Lanterns (Remastered 2009)") == "Paper Lanterns"
+    assert tidy_title("Paper Lanterns (Part II)") == "Paper Lanterns (Part II)"

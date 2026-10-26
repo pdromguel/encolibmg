@@ -1,3 +1,5 @@
+import pytest
+
 from encolibmg.lyrics import lrclib
 from encolibmg.lyrics.normalize import normalize_lrc
 
@@ -125,3 +127,64 @@ def test_find_by_name_without_artist_and_with_accents():
     cands = [_cand(5, "Sol de Março", "Cidade Azul"), _cand(6, "Sol de Março & Convidado", "Cidade Azul - Remastered")]
     assert find_by_name("", "Cidade Azul", search=lambda q: cands).id == 5
     assert find_by_name("sol de marco", "cidade azul", search=lambda q: cands).id == 5
+
+
+class FlakySession:
+    """Answers with the given HTTP statuses in turn (an exception class means a dropped connection)."""
+
+    def __init__(self, statuses, data=()):
+        self.statuses, self.data, self.calls = list(statuses), list(data), 0
+
+    def get(self, url, params=None, headers=None, timeout=None):
+        import requests
+
+        self.calls += 1
+        status = self.statuses.pop(0) if self.statuses else 200
+        if isinstance(status, type):
+            raise status("connection dropped")
+        resp = requests.Response()
+        resp.status_code, resp._content = status, b"[]"
+        resp.json = lambda: self.data
+        return resp
+
+
+def test_lrclib_retries_short_outages(monkeypatch):
+    import requests
+
+    waits = []
+    monkeypatch.setattr(lrclib.time, "sleep", waits.append)
+    s = FlakySession([502, requests.ConnectionError], data=RESULTS)
+    assert [c.id for c in lrclib.search("Adele Hello", session=s)] == [2, 1]
+    assert s.calls == 3 and waits == list(lrclib.RETRY_WAITS)
+
+
+def test_lrclib_busy_means_nothing_found(monkeypatch):
+    """LRCLIB answers 503 'server is busy' for searches with no match: after one retry it's an empty result."""
+    monkeypatch.setattr(lrclib.time, "sleep", lambda s: None)
+    s = FlakySession([503, 503, 503, 503])
+    assert lrclib.search("Zz - Made Up", session=s) == []
+    assert s.calls == 4  # two tries for the field search, two for the free-text fallback
+    assert lrclib.search("Adele Hello", session=FlakySession([503], data=RESULTS))  # a single 503 is retried
+
+
+def test_lrclib_gives_a_clear_error_when_down(monkeypatch):
+    import requests
+
+    monkeypatch.setattr(lrclib.time, "sleep", lambda s: None)
+    with pytest.raises(lrclib.LyricsUnavailable, match="502"):
+        lrclib.search("Adele Hello", session=FlakySession([502, 502, 502]))
+    with pytest.raises(lrclib.LyricsUnavailable, match="ConnectionError"):
+        lrclib.search("Adele Hello", session=FlakySession([requests.ConnectionError] * 3))
+    with pytest.raises(Exception) as e:  # a 404 is not retried
+        lrclib.search("Adele Hello", session=FlakySession([404]))
+    assert not isinstance(e.value, lrclib.LyricsUnavailable)
+
+
+def test_find_by_name_prefers_the_common_version_without_a_duration():
+    from encolibmg.lyrics.match import find_by_name
+
+    cands = [_cand(1, "Neon Harbor", "Paper Lanterns", 510.0),   # an extended mix, listed first
+             _cand(2, "Neon Harbor", "Paper Lanterns", 241.0),
+             _cand(3, "Neon Harbor", "Paper Lanterns", 242.0),
+             _cand(4, "Neon Harbor", "Paper Lanterns", 240.5)]
+    assert find_by_name("Neon Harbor", "Paper Lanterns", search=lambda q: cands).duration in (240.5, 241.0, 242.0)

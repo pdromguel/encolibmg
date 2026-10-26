@@ -64,10 +64,9 @@ def find_by_name(artist: str, title: str, duration: float | None = None, search=
     search = search or lrclib.search
     query = f"{artist} - {title}" if artist else title
     unwanted = [w for w in UNWANTED if not _has_word(query, w)]
+    cands = [c for c in search(query) if c.synced]
     best, best_score = None, 0.0
-    for c in search(query):
-        if not c.synced:
-            continue
+    for c in cands:
         ts = similarity(title, c.title)
         ars = similarity(artist, c.artist) if artist else 1.0
         if ts < TITLE_MIN or ars < ARTIST_MIN:
@@ -77,6 +76,8 @@ def find_by_name(artist: str, title: str, duration: float | None = None, search=
         score = ts + ars - (0.5 if any(_has_word(c.title, w) for w in unwanted) else 0)
         if duration is not None:
             score -= abs(c.duration - duration) / 100
+        else:  # no length to compare: the version most entries agree on (the album one, not an extended mix)
+            score += 0.01 * sum(abs(o.duration - c.duration) <= tol for o in cands if o is not c)
         if score > best_score:
             best, best_score = c, score
     return best

@@ -172,4 +172,6 @@ ENGINE = [
      "This playlist is empty or couldn't be read (is it public?)."),
     ("job.queue", "Fila de downloads", "Download queue"),
     ("dialog.csv", "Planilhas CSV", "CSV spreadsheets"),
+    ("err.lyrics_unavailable", "O LRCLIB (o site das letras) não respondeu agora ({detail}). Tente de novo daqui a pouco.",
+     "LRCLIB (the lyrics site) isn't answering right now ({detail}). Try again in a little while."),
 ]
