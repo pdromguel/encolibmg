@@ -25,6 +25,7 @@ encolibmg/
 │   ├── paths.py       config, log and backup folders (%APPDATA%\EncoLibMG)
 │   ├── i18n.py        translations; texts live in core/locales/*.json
 │   ├── errors.py      Cancelled, AlreadyExists, NoAudioMatch
+│   ├── gpu.py         uses the NVIDIA card only if PyTorch supports it (else the processor)
 │   └── files.py       safe file names, downloads with progress
 ├── library/           everything that reads or writes the EncoreLibrary folder
 │   ├── model.py       Library and Track: how files group into tracks and what kind each is
@@ -47,6 +48,7 @@ encolibmg/
     └── static/        the page: index.html, css/, js/ (app, store, views/ = screens, ui/ = dialogs and
                        toasts, fx/ = pixel effects), vendor/ (lit-html), fonts/, brand/
 scripts/
+├── benchmark.py       how long the heavy steps take on this PC (4-minute generated song)
 ├── i18n/              the translation tables (strings_engine.py, strings_ui.py) and build.py
 ├── brand/             logo, icons and the identity page, generated from pixel grids
 └── screenshots/       screenshots of the real window (for the README)

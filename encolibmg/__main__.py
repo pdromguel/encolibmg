@@ -20,9 +20,10 @@ def _fatal(detail: str):
 
 def main():
     setup_logging()
-    from encolibmg.core import i18n
+    from encolibmg.core import gpu, i18n
     from encolibmg.core.paths import load_config
 
+    logging.info("AI device: %s", gpu.choose_device())  # before anything imports torch
     i18n.set_language(load_config().get("language", "auto"))
     try:
         from encolibmg.webui.app import run

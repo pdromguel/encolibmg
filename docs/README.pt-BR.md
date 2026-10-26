@@ -28,6 +28,45 @@ liga e desliga e um guia de afinação MIDI com a letra palavra a palavra.</p>
 
 Não existe letra sincronizada? Ele baixa um **vídeo de karaokê** no lugar. Todas as faixas saem com o mesmo volume.
 
+## Hardware: o que você precisa e o que esperar
+
+A parte pesada de cada música é separar a voz (Demucs) e gerar o guia MIDI (CREPE + MMS). Isso roda na **placa de
+vídeo NVIDIA** quando existe uma, e no processador quando não. Todo o resto (Biblioteca, Sincronia, Verificar,
+Importar, Visual e som) é leve e roda bem em qualquer PC.
+
+**Medido** numa música de 4 minutos com o [`scripts/benchmark.py`](../scripts/benchmark.py) (baixar o áudio soma um
+pouco, conforme a sua internet):
+
+| PC | Tempo por música | Pico de memória |
+|---|---|---|
+| NVIDIA **RTX 5070 Ti** (16 GB) · Ryzen 5 7600X · 32 GB de RAM | **menos de 1 minuto** (0,8 min) | 3,4 GB de memória de vídeo · ~4 GB de RAM |
+| O mesmo PC **sem a placa de vídeo** (só o processador) | **11 a 12 minutos** | ~12 GB de RAM, ao gerar o guia |
+
+| | Mínimo | Recomendado |
+|---|---|---|
+| **Sistema** | Windows 10 ou 11, 64 bits | Windows 11 |
+| **Placa de vídeo** | nenhuma: tudo roda no processador | NVIDIA GeForce **série GTX 10 ou mais nova** (de preferência RTX) com **6 GB ou mais** de memória de vídeo |
+| **RAM** | 8 GB com placa NVIDIA · 16 GB sem | 16 GB ou mais |
+| **Processador** | qualquer um de 64 bits | 6 núcleos ou mais se não houver placa NVIDIA |
+| **Disco** | ~10 GB para o app e os modelos de IA, mais as suas músicas | um SSD |
+| **Internet** | para buscar e baixar músicas | |
+
+**O que esperar**
+- **Placa NVIDIA recente (RTX):** uma música fica pronta em cerca de um minuto; dá para adicionar uma atrás da outra.
+- **Placa NVIDIA mais antiga ou de entrada** (GTX 10/16, RTX 2060/3050…): funciona igual, só que mais devagar.
+  Ainda não medimos essas placas: rode `python scripts/benchmark.py` e compartilhe seus números numa
+  [issue](https://github.com/pdromguel/encolibmg/issues).
+- **Sem placa NVIDIA** (vídeo AMD ou Intel, a maioria dos notebooks): tudo funciona, no processador. Conte com 10
+  minutos ou mais por música num processador moderno de 6 núcleos, mais com menos núcleos ou modelos antigos.
+  Dica: desligue **Gerar guia MIDI** ao adicionar e depois selecione várias músicas na Biblioteca para gerar os
+  guias de uma vez, por exemplo durante a noite. Gerar guias assim usa ~12 GB de RAM, então com 8 GB pode faltar
+  memória.
+- **Placas de vídeo AMD e Intel** não são usadas: as bibliotecas de IA precisam do CUDA da NVIDIA.
+- **NVIDIA série GTX 900 ou mais antiga:** o PyTorch atual não tem mais suporte. O app detecta isso e usa o
+  processador.
+- **Primeira música:** os modelos de IA (1,6 GB) são baixados uma vez, então a primeira música demora alguns
+  minutos a mais.
+
 ## Telas
 
 <table>
@@ -51,8 +90,8 @@ Não existe letra sincronizada? Ele baixa um **vídeo de karaokê** no lugar. To
 
 1. Instale o **Python 3.12** e o **ffmpeg** (`winget install Gyan.FFmpeg`). O Windows 10/11 já traz o WebView2.
 2. Baixe a [versão mais recente](https://github.com/pdromguel/encolibmg/releases/latest) (ou clone o repositório) e
-   dê dois cliques em **`install.bat`**. São ~3 GB por causa do PyTorch e dos modelos de IA; com placa NVIDIA,
-   tudo roda na GPU.
+   dê dois cliques em **`install.bat`**. Ele baixa o PyTorch e escolhe a versão certa para o seu PC (a versão para
+   NVIDIA ocupa ~8 GB instalada); veja [Hardware](#hardware-o-que-você-precisa-e-o-que-esperar).
 3. Dê dois cliques em **`EncoLibMG.bat`**, abra ou crie uma biblioteca e busque uma música.
 
 Depois aponte o Setup (F2) do Encore para a pasta da biblioteca. O app fala português do Brasil e inglês

@@ -83,7 +83,9 @@ inclusive em japonês). Antes de importar, você confere os nomes numa prévia e
 
 ## Bom saber
 - **Nada é apagado de verdade:** o que sai vai para a Lixeira, e toda letra alterada ganha backup.
-- **O primeiro guia demora mais:** os modelos de IA (Demucs, CREPE, MMS, ~1,2 GB) são baixados na primeira vez.
+- **A primeira música demora mais:** os modelos de IA (Demucs, CREPE, MMS, 1,6 GB) são baixados na primeira vez.
+- **Qual a velocidade no meu PC?** Veja [Hardware](README.pt-BR.md#hardware-o-que-você-precisa-e-o-que-esperar) ou rode
+  `python scripts/benchmark.py`.
 - **Log:** `%APPDATA%\EncoLibMG\log.txt`, útil para relatar um problema.
 
 ## Identidade

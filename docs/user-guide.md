@@ -83,7 +83,9 @@ The app can build the Multiplex **from your own file**, at your source's quality
 
 ## Good to know
 - **Nothing is deleted for good:** whatever is removed goes to the Recycle Bin, and every edited lyric gets a backup.
-- **First guide is slower:** the AI models (Demucs, CREPE, MMS, ~1.2 GB) are downloaded the first time.
+- **First song is slower:** the AI models (Demucs, CREPE, MMS, 1.6 GB) are downloaded the first time.
+- **How fast is it on my PC?** See [Hardware](../README.md#hardware-what-you-need-and-what-to-expect), or run
+  `python scripts/benchmark.py`.
 - **Log:** `%APPDATA%\EncoLibMG\log.txt`, useful when reporting a bug.
 
 ## Identity

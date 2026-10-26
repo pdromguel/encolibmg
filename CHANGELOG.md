@@ -4,6 +4,14 @@ All notable changes to EncoLibMG. Versions follow [Semantic Versioning](https://
 
 ## [Unreleased]
 
+### Added
+- **Hardware** section in the README: measured times per song with and without an NVIDIA card, minimum and
+  recommended PC, what to expect. `scripts/benchmark.py` measures your own PC.
+
+### Fixed
+- NVIDIA cards older than the GTX 10 series (unsupported by PyTorch) made the AI steps fail; the app now detects
+  them and uses the processor.
+
 ### Changed
 - **Renamed launchers:** `instalar.bat` → `install.bat`, `Abrir EncoLibMG.bat` → `EncoLibMG.bat`.
 - New front page with an animated demo and screenshots of every screen (from a demo library of invented songs);

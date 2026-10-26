@@ -28,6 +28,43 @@ switch on and off, and a MIDI pitch guide with word-by-word lyrics.</p>
 
 No synced lyrics anywhere? It grabs a **karaoke video** instead. Every track ends up at the same loudness.
 
+## Hardware: what you need and what to expect
+
+The heavy part of each song is splitting the vocals (Demucs) and building the MIDI guide (CREPE + MMS). These run
+on an **NVIDIA graphics card** when there is one, and on the processor otherwise. Everything else (Library, Sync,
+Check, Import, Look & sound) is light and runs well on any PC.
+
+**Measured** on a 4-minute song with [`scripts/benchmark.py`](scripts/benchmark.py) (downloading the audio adds a
+little on top, depending on your connection):
+
+| PC | Time per song | Peak memory |
+|---|---|---|
+| NVIDIA **RTX 5070 Ti** (16 GB) · Ryzen 5 7600X · 32 GB RAM | **under 1 minute** (0.8 min) | 3.4 GB video memory · ~4 GB RAM |
+| The same PC **without the graphics card** (processor only) | **11–12 minutes** | ~12 GB RAM, while building the guide |
+
+| | Minimum | Recommended |
+|---|---|---|
+| **System** | Windows 10 or 11, 64-bit | Windows 11 |
+| **Graphics card** | none needed: everything runs on the processor | NVIDIA GeForce **GTX 10 series or newer** (ideally RTX) with **6 GB+** of video memory |
+| **RAM** | 8 GB with an NVIDIA card · 16 GB without one | 16 GB or more |
+| **Processor** | any 64-bit processor | 6+ cores if there's no NVIDIA card |
+| **Disk** | ~10 GB for the app and its AI models, plus your songs | an SSD |
+| **Internet** | to search and download songs | |
+
+**What to expect**
+- **Recent NVIDIA card (RTX):** a song is ready in about a minute; you can add songs one after another.
+- **Older or entry-level NVIDIA card** (GTX 10/16, RTX 2060/3050…): it works the same way, just slower.
+  We haven't measured these yet: run `python scripts/benchmark.py` and share your numbers in an
+  [issue](https://github.com/pdromguel/encolibmg/issues).
+- **No NVIDIA card** (AMD or Intel graphics, most laptops): everything works, on the processor. Count on 10+
+  minutes per song with a modern 6-core processor, more with fewer or older cores. Tip: turn off **Build MIDI
+  guide** when adding, then select several songs in the Library and build their guides in one go, for example
+  overnight. Building guides this way needs ~12 GB of RAM, so with 8 GB it may run out of memory.
+- **AMD and Intel graphics cards** aren't used: the AI libraries need NVIDIA's CUDA.
+- **NVIDIA GTX 900 series or older:** the current PyTorch no longer supports them. The app detects this and uses
+  the processor instead.
+- **First song:** the AI models (1.6 GB) are downloaded once, so the first song takes a few minutes longer.
+
 ## Screens
 
 <table>
@@ -51,8 +88,8 @@ No synced lyrics anywhere? It grabs a **karaoke video** instead. Every track end
 
 1. Install **Python 3.12** and **ffmpeg** (`winget install Gyan.FFmpeg`). Windows 10/11 already has WebView2.
 2. Download the [latest release](https://github.com/pdromguel/encolibmg/releases/latest) (or clone the repo) and
-   double-click **`install.bat`**. It's ~3 GB because of PyTorch and the AI models; with an NVIDIA card,
-   everything runs on the GPU.
+   double-click **`install.bat`**. It downloads PyTorch and picks the right build for your PC (the NVIDIA build
+   is ~8 GB installed); see [Hardware](#hardware-what-you-need-and-what-to-expect).
 3. Double-click **`EncoLibMG.bat`**, open or create a library, and search for a song.
 
 Then point Encore's Setup (F2) at the library folder. The app speaks English and Brazilian Portuguese
