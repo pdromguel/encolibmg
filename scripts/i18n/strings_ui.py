@@ -43,7 +43,7 @@ SHELL = [
     ("ui.lang.title", "Idioma", "Language"),
     ("ui.lang.auto", "Automático (Windows)", "Automatic (Windows)"),
     ("ui.lang.changed", "Idioma: Português (Brasil).", "Language: English."),
-    ("ui.help.title", "Atalhos", "Shortcuts"),
+    ("ui.help.title", "Ajuda", "Help"),
     ("ui.help.lead", "Tudo no EncoLibMG funciona pelo teclado também.", "Everything in EncoLibMG works from the keyboard too."),
     ("ui.help.search", "Buscar uma música", "Search for a song"),
     ("ui.help.screens", "Trocar de tela (Início, Adicionar, Biblioteca, Verificar, Importar, Visual)",
@@ -421,4 +421,23 @@ QUEUE = [
     ("ui.add.pick", "Marcar para a fila", "Pick for the queue"),
 ]
 
-UI = COMMON + SHELL + HOME + ADD + LIBRARY + CHECK + IMPORT + VISUAL + SYNC + GUIDE + MISC + QUEUE
+ABOUT = [
+    ("ui.about.title", "Sobre", "About"),
+    ("ui.about.version", "EncoLibMG {version}", "EncoLibMG {version}"),
+    ("ui.about.ytdlp", "Baixador do YouTube (yt-dlp) {version}", "YouTube downloader (yt-dlp) {version}"),
+    ("ui.about.check", "Procurar atualizações", "Check for updates"),
+    ("ui.about.update_ytdlp", "Atualizar o baixador do YouTube", "Update the YouTube downloader"),
+    ("ui.about.ytdlp_hint", "O YouTube muda de vez em quando e os downloads param de funcionar até o baixador ser atualizado.",
+     "YouTube changes every now and then, and downloads stop working until the downloader is updated."),
+    ("ui.about.latest", "Você está com a versão mais recente ({version}).", "You have the latest version ({version})."),
+    ("ui.about.offline", "Não deu para consultar o GitHub agora.", "Couldn't reach GitHub right now."),
+    ("ui.about.new", "Saiu o EncoLibMG {version}.", "EncoLibMG {version} is out."),
+    ("ui.about.download", "Baixar", "Download"),
+    ("ui.about.ytdlp_updated", "Baixador atualizado: {before} → {after}. Reabra o EncoLibMG para usar.",
+     "Downloader updated: {before} → {after}. Reopen EncoLibMG to use it."),
+    ("ui.about.ytdlp_same", "O baixador já está na versão mais recente ({version}).",
+     "The downloader is already up to date ({version})."),
+    ("ui.about.site", "Página do projeto", "Project page"),
+]
+
+UI = COMMON + SHELL + HOME + ADD + LIBRARY + CHECK + IMPORT + VISUAL + SYNC + GUIDE + MISC + QUEUE + ABOUT

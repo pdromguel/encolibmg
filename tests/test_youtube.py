@@ -56,3 +56,29 @@ def test_search_maps_entries(monkeypatch):
     assert seen["opts"]["extract_flat"]
     assert [(r.id, r.channel, r.duration) for r in res] == [("abc", "C", 180.0), ("def", "D", None)]
     assert res[0].url == "https://www.youtube.com/watch?v=abc"
+
+
+def test_youtube_failure_suggests_updating(monkeypatch):
+    import pytest
+    from yt_dlp.utils import DownloadError
+
+    from encolibmg import youtube
+
+    class Broken:
+        def __init__(self, opts):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def download(self, urls):
+            raise DownloadError("\x1b[0;31mERROR:\x1b[0m [youtube] abc: Sign in to confirm you're not a bot\nmore")
+
+    monkeypatch.setattr(youtube, "YoutubeDL", Broken)
+    with pytest.raises(RuntimeError) as e:
+        youtube._run("https://www.youtube.com/watch?v=abc", {}, None, None)
+    assert "[youtube] abc: Sign in to confirm you're not a bot" in str(e.value)
+    assert "yt-dlp" in str(e.value) or "baixador" in str(e.value)

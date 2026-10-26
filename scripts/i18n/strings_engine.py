@@ -174,4 +174,11 @@ ENGINE = [
     ("dialog.csv", "Planilhas CSV", "CSV spreadsheets"),
     ("err.lyrics_unavailable", "O LRCLIB (o site das letras) não respondeu agora ({detail}). Tente de novo daqui a pouco.",
      "LRCLIB (the lyrics site) isn't answering right now ({detail}). Try again in a little while."),
+    ("step.update_ytdlp", "atualizando o baixador do YouTube (yt-dlp)", "updating the YouTube downloader (yt-dlp)"),
+    ("job.update_ytdlp", "Atualizar o yt-dlp", "Update yt-dlp"),
+    ("err.update_failed", "Não deu para atualizar: {detail}", "Couldn't update: {detail}"),
+    ("err.youtube_failed", "O YouTube recusou o download ({detail}). Isso costuma se resolver atualizando o baixador: "
+     "Ajuda (?) → Atualizar o baixador do YouTube.",
+     "YouTube refused the download ({detail}). Updating the downloader usually fixes this: "
+     "Help (?) → Update the YouTube downloader."),
 ]

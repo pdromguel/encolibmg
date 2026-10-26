@@ -8,6 +8,7 @@ from pathlib import Path
 from threading import Event
 
 from yt_dlp import YoutubeDL
+from yt_dlp.utils import YoutubeDLError
 
 from encolibmg.core.errors import Cancelled
 from encolibmg.core.i18n import t
@@ -82,7 +83,16 @@ def _run(url: str, opts: dict, cancel, on_progress) -> None:
         # yt-dlp wraps exceptions raised inside hooks
         if cancel is not None and cancel.is_set():
             raise Cancelled() from e
+        if isinstance(e, YoutubeDLError):  # usually YouTube changed something: a newer yt-dlp fixes it
+            raise RuntimeError(t("err.youtube_failed", detail=_short(e))) from e
         raise
+
+
+def _short(e: Exception) -> str:
+    """yt-dlp's message without 'ERROR:', terminal colors or the extra lines."""
+    text = re.sub(r"\x1b\[[0-9;]*m", "", str(e)).strip()
+    text = re.sub(r"^ERROR:\s*", "", text.splitlines()[0] if text else type(e).__name__)
+    return text[:160]
 
 
 def download_audio(url: str, dest_dir: Path, cancel: Event | None = None, on_progress=None) -> Path:

@@ -44,3 +44,16 @@ def test_user_setting_wins(monkeypatch):
     fake_smi(monkeypatch, "5.2\n")
     assert gpu.choose_device({"CUDA_VISIBLE_DEVICES": "0"}) == "gpu"
     assert gpu.choose_device({"CUDA_VISIBLE_DEVICES": "-1"}) == "cpu"
+
+
+def test_bundled_ffmpeg_goes_first_on_path(tmp_path, monkeypatch):
+    from encolibmg.__main__ import use_bundled_tools
+
+    (tmp_path / "python").mkdir()
+    (tmp_path / "ffmpeg" / "bin").mkdir(parents=True)
+    monkeypatch.setenv("PATH", "C:\\Windows")
+    assert not use_bundled_tools(tmp_path / "python" / "python.exe")  # no ffmpeg.exe there yet
+    (tmp_path / "ffmpeg" / "bin" / "ffmpeg.exe").write_bytes(b"")
+    assert use_bundled_tools(tmp_path / "python" / "python.exe")
+    import os
+    assert os.environ["PATH"].split(os.pathsep)[0] == str((tmp_path / "ffmpeg" / "bin").resolve())

@@ -80,12 +80,18 @@ class LibraryApi(ApiCore):
 
     @api
     def open_url(self, url: str):
-        """Opens YouTube links in the system browser (nothing else is allowed)."""
+        """Opens YouTube links, and this project's GitHub pages (the update notice), in the system browser.
+        Nothing else is allowed."""
         import webbrowser
         from urllib.parse import urlsplit
 
-        host = urlsplit(url).hostname or ""
-        if urlsplit(url).scheme != "https" or not (host == "youtu.be" or host.endswith("youtube.com")):
+        from encolibmg.updates import REPO
+
+        parts = urlsplit(url)
+        host = parts.hostname or ""
+        youtube = host == "youtu.be" or host.endswith("youtube.com")
+        project = host == "github.com" and (parts.path + "/").startswith(f"/{REPO}/")
+        if parts.scheme != "https" or not (youtube or project):
             raise ValueError(tr("err.only_youtube"))
         webbrowser.open(url)
         return True

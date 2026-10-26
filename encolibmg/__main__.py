@@ -1,5 +1,7 @@
 import logging
+import os
 import sys
+from pathlib import Path
 
 from encolibmg.core.paths import setup_logging
 
@@ -18,8 +20,19 @@ def _fatal(detail: str):
     return 1
 
 
+def use_bundled_tools(python: Path | None = None) -> bool:
+    """The installer puts ffmpeg next to its own Python ({app}\\python, {app}\\ffmpeg\\bin): use it first."""
+    bin_dir = Path(python or sys.executable).resolve().parent.parent / "ffmpeg" / "bin"
+    if not (bin_dir / "ffmpeg.exe").is_file():
+        return False
+    os.environ["PATH"] = str(bin_dir) + os.pathsep + os.environ.get("PATH", "")
+    return True
+
+
 def main():
     setup_logging()
+    if use_bundled_tools():
+        logging.info("using the installer's ffmpeg")
     from encolibmg.core import gpu, i18n
     from encolibmg.core.paths import load_config
 

@@ -1,7 +1,7 @@
 // EncoLibMG shell: header, routed screens with a pixel dissolve, dock (job progress + mini player), keys.
 import { icon } from "./fx/icons.js";
 import { html, render } from "../vendor/lit-html.js";
-import { call, on, tryCall } from "./api.js";
+import { call, on, runJob, tryCall } from "./api.js";
 import { loadBrand } from "./fx/elements.js";
 import { fmtTime } from "./fx/core.js";
 import { confetti, pixelWipe } from "./fx/effects.js";
@@ -126,7 +126,10 @@ function languageMenu(e) {
 /* ---------------------------------------------------------------- help --- */
 export function openHelp() {
   const k = (...keys) => html`<span class="k">${keys.map(x => html`<kbd>${x}</kbd>`)}</span>`;
-  modal(() => html`
+  let info = null;
+  modal((close, redraw) => {
+    if (info === null) { info = {}; tryCall("app_info").then(i => { info = i || {}; redraw(); }); }
+    return html`
     <h2>${t("ui.help.title")}</h2>
     <p class="lead">${t("ui.help.lead")}</p>
     <div class="keys">
@@ -137,7 +140,37 @@ export function openHelp() {
       ${k("Esc")}<span>${t("ui.help.esc")}</span>
       ${k("Ctrl", "O")}<span>${t("ui.help.open")}</span>
       ${k("?")}<span>${t("ui.help.help")}</span>
-    </div>`);
+    </div>
+    <h3 class="about-h">${t("ui.about.title")}</h3>
+    <div class="about">
+      <span>${t("ui.about.version", { version: info.version || "…" })}</span>
+      <button class="btn quiet sm" @click=${() => checkUpdates(true)}>${t("ui.about.check")}</button>
+      <span>${t("ui.about.ytdlp", { version: info.ytdlp || "…" })}</span>
+      <button class="btn quiet sm" ?disabled=${!!state.job} @click=${updateYtdlp}>${t("ui.about.update_ytdlp")}</button>
+    </div>
+    <p class="muted small">${t("ui.about.ytdlp_hint")}
+      <a class="link" href="javascript:void 0" @click=${() => tryCall("open_url", info.releases)}>${t("ui.about.site")}</a></p>`;
+  });
+}
+
+/** The notice for a new release. `force` (the Help button) always asks GitHub and always answers. */
+async function checkUpdates(force = false) {
+  let res;
+  try { res = await call("check_updates", force); } catch { if (force) toast(t("ui.about.offline"), { kind: "warn" }); return; }
+  if (res.newer) {
+    toast(t("ui.about.new", { version: res.latest }), { kind: "info", life: 15000,
+      actions: [{ label: t("ui.about.download"), primary: true, run: () => tryCall("open_url", res.url) }] });
+  } else if (force) {
+    toast(res.latest ? t("ui.about.latest", { version: res.current }) : t("ui.about.offline"), { kind: res.latest ? "ok" : "warn" });
+  }
+}
+
+async function updateYtdlp() {
+  try {
+    const r = await runJob("update_ytdlp");
+    toast(r.changed ? t("ui.about.ytdlp_updated", r) : t("ui.about.ytdlp_same", { version: r.after }),
+          { kind: "ok", life: r.changed ? 12000 : undefined });
+  } catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
 }
 
 /* ---------------------------------------------------------------- shell --- */
@@ -264,6 +297,7 @@ addEventListener("keydown", e => {
   await refresh();
   render(shell(state), root);
   screens[state.route.name]?.enter?.(state.route.param);
+  checkUpdates();  // quiet: at most once a day, nothing shown when up to date or offline
   const boot = document.getElementById("boot");
   boot.classList.add("out");
   setTimeout(() => boot.remove(), 500);

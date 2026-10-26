@@ -260,3 +260,28 @@ def test_cancelling_the_queue_job_pauses_the_queue(api, monkeypatch):
     monkeypatch.setattr(api, "_queue_running", lambda: True)
     api.job_cancel()
     assert api.queue_state()["data"]["paused"]
+
+
+def test_open_url_allows_only_this_projects_github_pages(api, monkeypatch):
+    opened = []
+    monkeypatch.setattr("webbrowser.open", opened.append)
+    good = "https://github.com/pdromguel/encolibmg/releases/tag/v1.0.0"
+    assert api.open_url(good)["ok"] and opened == [good]
+    for bad in ("https://github.com/pdromguel/encolibmg-evil/releases", "https://github.com/someone/else",
+                "http://github.com/pdromguel/encolibmg/releases", "https://github.com.evil.example/pdromguel/encolibmg/"):
+        assert api.open_url(bad)["kind"] == "ValueError", bad
+    assert opened == [good]
+
+
+def test_system_api(api, monkeypatch):
+    from encolibmg import updates
+
+    monkeypatch.setattr(updates, "ytdlp_version", lambda: "2025.6.30")
+    monkeypatch.setattr(updates, "latest_release", lambda session=None: {"version": "9.9.9", "url": "u", "name": "n"})
+    info = api.app_info()["data"]
+    assert info["ytdlp"] == "2025.6.30" and info["releases"].endswith("/releases")
+    res = api.check_updates(True)["data"]
+    assert res["newer"] and res["latest"] == "9.9.9"
+    monkeypatch.setattr(updates, "update_ytdlp", lambda p: {"before": "a", "after": "b", "changed": True})
+    api.update_ytdlp()
+    assert api._jobs.results[-1] == {"before": "a", "after": "b", "changed": True}

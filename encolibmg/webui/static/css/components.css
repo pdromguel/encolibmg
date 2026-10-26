@@ -151,3 +151,7 @@ canvas.wipe { position: fixed; z-index: 40; left: 0; right: 0; top: var(--header
 .qrow.s-processing .g, .qrow.s-downloading .g, .qrow.s-finding .g { color: var(--text); }
 .qrow.s-skipped { opacity: .6; }
 .qacts { display: flex; gap: 2px; flex: none; }
+
+/* ---------------------------------------------------------------- help: about --- */
+.about-h { margin: 22px 0 10px; font-size: 14px; }
+.about { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; margin-bottom: 10px; }
