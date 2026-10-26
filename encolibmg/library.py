@@ -16,6 +16,7 @@ from send2trash import send2trash
 
 from encolibmg.errors import AlreadyExists
 from encolibmg.tags import write_tags
+from encolibmg.i18n import t
 
 AUDIO_EXTS = {".mp3", ".m4a", ".ogg", ".wav"}
 VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".avi"}
@@ -43,7 +44,7 @@ def _clean(part: str) -> str:
 
 def base_name(artist: str, title: str) -> str:
     """File base name in the 'Artist - Title' form Encore expects."""
-    name = f"{_clean(artist) or 'Desconhecido'} - {_clean(title) or 'Sem título'}"
+    name = f"{_clean(artist) or t('name.unknown_artist')} - {_clean(title) or t('name.untitled')}"
     if len(name) > MAX_BASE_LEN:
         name = name[:MAX_BASE_LEN]
     return name.rstrip(". ")
@@ -55,7 +56,7 @@ def inside(root: Path, rel: str) -> Path:
     root = Path(root).resolve()
     target = (root / rel).resolve() if rel else root
     if target != root and root not in target.parents:
-        raise ValueError("Caminho fora da biblioteca.")
+        raise ValueError(t("err.outside_library"))
     return target
 
 
@@ -103,22 +104,13 @@ class Track:
         return next((f for f in self.files if f.suffix.lower() in exts), None)
 
 
-KIND_LABEL = {
-    "multiplex_lrc": "Multiplex + LRC",
-    "audio_lrc": "Áudio + LRC",
-    "mtv": "MTV",
-    "midi": "MIDI",
-    "orphan": "⚠ invisível no Encore",
-}
-
-
 def kind_label(track: Track) -> str:
-    label = KIND_LABEL.get(track.kind, track.kind)
+    label = t(f"kind.{track.kind}")
     if track.kind in ("multiplex_lrc", "audio_lrc"):
         if track.has_guide:
-            label += " + guia"
+            label += t("kind.plus_guide")
         if track.has_video:
-            label += " + clipe"
+            label += t("kind.plus_clip")
     return label
 
 
@@ -154,7 +146,7 @@ class Library:
         manifest = path / "manifest.json"
         if not manifest.exists():
             # additionalContents must exist for Encore to add its automatic MTV category
-            data = {"title": title, "description": "Criada pelo EncoLibMG",
+            data = {"title": title, "description": t("manifest.description"),
                     "additionalContents": {"bgvCategories": [], "bumperImages": []}}
             manifest.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         return cls(path)
@@ -163,7 +155,7 @@ class Library:
     def open(cls, path: Path) -> "Library":
         path = Path(path)
         if not (path / "manifest.json").is_file():
-            raise LibraryError(f"{path} não tem manifest.json — não é uma biblioteca do Encore.")
+            raise LibraryError(t("err.not_a_library", path=path))
         return cls(path)
 
     def scan(self) -> list[Track]:
@@ -181,26 +173,26 @@ class Library:
                 groups[key] = Track(base, artist, title)
             groups[key].files.append(f)
         tracks = list(groups.values())
-        for t in tracks:
-            t.kind = _classify(t)
-        return sorted(tracks, key=lambda t: (t.artist.lower(), t.title.lower()))
+        for tr in tracks:
+            tr.kind = _classify(tr)
+        return sorted(tracks, key=lambda tr: (tr.artist.lower(), tr.title.lower()))
 
     def exists(self, base: str) -> bool:
         key = _nfc(base).lower()
-        return any(t.base.lower() == key for t in self.scan())
+        return any(tr.base.lower() == key for tr in self.scan())
 
     def rename_track(self, track: Track, artist: str, title: str) -> Track:
         """Renames every sibling file and rewrites mp3 tags. Case-only renames are allowed."""
         new_base = base_name(artist, title)
         if new_base.lower() != track.base.lower() and self.exists(new_base):
-            raise AlreadyExists(f"'{new_base}' já está na biblioteca.")
+            raise AlreadyExists(t("err.already_exists", base=new_base))
         for f in track.files:
             target = f.with_name(new_base + f.name[len(track.base):])
             if target.name != f.name:
                 f.rename(target)
             if target.suffix.lower() == ".mp3":
                 write_tags(target, artist.strip(), title.strip())
-        return next(t for t in self.scan() if t.base == new_base)
+        return next(tr for tr in self.scan() if tr.base == new_base)
 
     def remove(self, track: Track) -> None:
         for f in track.files:

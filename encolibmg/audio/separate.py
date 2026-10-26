@@ -16,6 +16,7 @@ from pathlib import Path
 from threading import Event
 
 from encolibmg.errors import Cancelled
+from encolibmg.i18n import t
 
 MODEL = "htdemucs_ft"
 SHIFTS = 2
@@ -87,10 +88,10 @@ def separate(wav: Path, work_dir: Path, cancel: Event | None = None, on_progress
         raise Cancelled()
     if proc.returncode != 0:
         log = "\n".join(l for l in tail if not _PERCENT.search(l))
-        raise RuntimeError(f"Demucs falhou (código {proc.returncode}):\n{log[-2000:]}")
+        raise RuntimeError(t("err.demucs_failed", code=proc.returncode, detail=log[-2000:]))
 
     out = work_dir / model / wav.stem
     inst, voc = out / "no_vocals.wav", out / "vocals.wav"
     if not (inst.exists() and voc.exists()):
-        raise RuntimeError(f"Demucs terminou mas não gerou os arquivos em {out}")
+        raise RuntimeError(t("err.demucs_no_output", path=out))
     return inst, voc

@@ -8,16 +8,17 @@ import subprocess
 from pathlib import Path
 
 from encolibmg.audio import loudness
+from encolibmg.i18n import t
 
 FFMPEG = "ffmpeg"
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
-def _ffmpeg(cmd: list[str], what: str) -> None:
+def _ffmpeg(cmd: list[str], err_key: str) -> None:
     proc = subprocess.run([FFMPEG, "-v", "error", "-y", *cmd], capture_output=True, text=True,
                           encoding="utf-8", errors="replace", creationflags=_NO_WINDOW)
     if proc.returncode != 0:
-        raise RuntimeError(f"ffmpeg falhou ao {what}:\n{proc.stderr[-2000:]}")
+        raise RuntimeError(t(err_key, detail=proc.stderr[-2000:]))
 
 
 def make_multiplex(instrumental: Path, vocals: Path, dest: Path, normalize: bool = True) -> Path:
@@ -30,12 +31,12 @@ def make_multiplex(instrumental: Path, vocals: Path, dest: Path, normalize: bool
     )
     mixed = dest.with_name(dest.stem + ".mix.wav")
     _ffmpeg(["-i", str(instrumental), "-i", str(vocals), "-filter_complex", graph, "-map", "[a]",
-             "-c:a", "pcm_f32le", str(mixed)], "mixar o multiplex")
+             "-c:a", "pcm_f32le", str(mixed)], "err.ffmpeg_mix")
     try:
         gain = loudness.gain_for(loudness.measure(mixed)) if normalize else 0.0
         _ffmpeg(["-i", str(mixed), "-af", f"volume={gain:.2f}dB",
                  "-c:a", "libmp3lame", "-b:a", "320k", "-id3v2_version", "3", str(dest)],
-                "codificar o mp3")
+                "err.ffmpeg_encode")
     finally:
         mixed.unlink(missing_ok=True)
     if normalize:

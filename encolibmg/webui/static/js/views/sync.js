@@ -9,6 +9,8 @@ import { player } from "../player.js";
 import { setView, state, view } from "../store.js";
 import { confirmDialog } from "../ui/overlay.js";
 import { toast } from "../ui/toast.js";
+// `t` is a time in this file, so the translator is imported as `tr`
+import { fixed, t as tr, tt } from "../i18n.js";
 import { noLibrary } from "./common.js";
 
 const REACTION_MS = 150;
@@ -137,12 +139,12 @@ function tapAnchor() {
 
 function suggest() {
   const s = v();
-  if (s.data?.onset == null) return toast("Não consegui achar o início da voz nesta faixa.", { kind: "warn" });
+  if (s.data?.onset == null) return toast(tr("ui.sync.no_onset"), { kind: "warn" });
   const off = Math.round(s.data.onset * 1000) - s.data.lines[0].ms;
   edit({ offset: off, anchors: {} });
-  toast(`A voz começa em ${fmtTimePrecise(s.data.onset)}: deslocamento ${(off / 1000).toFixed(2)} s.`, {
-    kind: "info", detail: "Toque a partir da primeira linha para conferir.",
-    actions: [{ label: "▶ Conferir", primary: true, run: () => { player.seek(Math.max(0, s.data.onset - 1.5)); player.play(); } }] });
+  toast(tr("ui.sync.onset", { time: fmtTimePrecise(s.data.onset), offset: fixed(off / 1000) }), {
+    kind: "info", detail: tr("ui.sync.onset_detail"),
+    actions: [{ label: tr("ui.sync.check"), primary: true, run: () => { player.seek(Math.max(0, s.data.onset - 1.5)); player.play(); } }] });
 }
 
 async function save() {
@@ -152,19 +154,17 @@ async function save() {
   if (!res) return;
   setView("sync", { data: { ...s.data, lines: res.lines, has_backup: true }, offset: 0, anchors: {}, dirty: false });
   refresh();
-  if (res.has_guide && await confirmDialog("Regerar o guia?",
-      "Esta faixa tem guia MIDI, e o Encore mostra a letra do guia (palavra a palavra), não a do .lrc. Regerar agora com a letra nova?",
-      { ok: "Regerar guia" })) {
-    try { await runJob("track_guides", [s.base]); toast("Guia regerado com a letra nova.", { kind: "ok" }); }
+  if (res.has_guide && await confirmDialog(tr("ui.sync.regen_q"), tr("ui.sync.regen_text"), { ok: tr("ui.lib.rebuild_guide") })) {
+    try { await runJob("track_guides", [s.base]); toast(tr("ui.sync.regen_done"), { kind: "ok" }); }
     catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
-  } else toast("Letra salva.", { kind: "ok", detail: "O original ficou no backup: use Desfazer se precisar." });
+  } else toast(tr("ui.sync.saved"), { kind: "ok", detail: tr("ui.sync.saved_detail") });
 }
 
 async function undo() {
   const s = v();
-  if (!await confirmDialog("Desfazer o último salvamento?", "A letra volta para a versão anterior (backup).")) return;
+  if (!await confirmDialog(tr("ui.sync.undo_q"), tr("ui.sync.undo_text"))) return;
   const res = await tryCall("sync_undo", s.base);
-  if (res) { setView("sync", { data: { ...s.data, lines: res.lines, has_backup: res.has_backup }, offset: 0, anchors: {}, dirty: false }); toast("Desfeito.", { kind: "ok" }); }
+  if (res) { setView("sync", { data: { ...s.data, lines: res.lines, has_backup: res.has_backup }, offset: 0, anchors: {}, dirty: false }); toast(tr("ui.sync.undone"), { kind: "ok" }); }
 }
 
 /* ---------------------------------------------------------------- screen --- */
@@ -189,35 +189,35 @@ export const sync = {
     if (!st.app?.library) return html`<div class="page">${noLibrary()}</div>`;
     const s = v();
     if (s.loading || !s.data) return html`<div class="page"><div class="empty">${s.loading
-      ? html`<pixel-mark singing style="width:56px;height:56px"></pixel-mark><p>Lendo a faixa e desenhando a onda da voz…</p>`
-      : html`<p>Escolha uma faixa na <a class="link" href="#/library">Biblioteca</a>.</p>`}</div></div>`;
+      ? html`<pixel-mark singing style="width:56px;height:56px"></pixel-mark><p>${tr("ui.sync.loading")}</p>`
+      : html`<p>${tt("ui.sync.pick", { link: html`<a class="link" href="#/library">${tr("ui.nav.library")}</a>` })}</p>`}</div></div>`;
     const L = lines(), d = s.data, t = (st.player?.base === s.base ? st.player.time : 0) * 1000;
     let cur = -1; L.forEach((l, k) => { if (l.ms <= t) cur = k; });
     const anchorSet = new Set(Object.keys(s.anchors).map(Number));
     const nAnch = anchorSet.size;
     return html`<div class="page sync">
       <div class="page-head rise">
-        <a class="btn quiet sm" href="#/library">${icon("back")} Biblioteca</a>
-        <div class="grow"><h2 class="ellipsis">Sincronia <span class="muted">·</span> ${d.title}</h2><p class="sub">${d.artist}${d.has_guide ? " · tem guia MIDI" : ""}</p></div>
-        <button class="btn ghost" ?disabled=${!d.has_backup} @click=${undo}>${icon("undo")} Desfazer</button>
-        <button class="btn" ?disabled=${!s.dirty} @click=${save}>Salvar <span class="k">Ctrl S</span></button>
+        <a class="btn quiet sm" href="#/library">${icon("back")} ${tr("ui.nav.library")}</a>
+        <div class="grow"><h2 class="ellipsis">${tr("ui.sync.title")} <span class="muted">·</span> ${d.title}</h2><p class="sub">${d.artist}${d.has_guide ? tr("ui.sync.has_guide") : ""}</p></div>
+        <button class="btn ghost" ?disabled=${!d.has_backup} @click=${undo}>${icon("undo")} ${tr("ui.sync.undo")}</button>
+        <button class="btn" ?disabled=${!s.dirty} @click=${save}>${tr("ui.common.save")} <span class="k">Ctrl S</span></button>
       </div>
       <div class="waves rise" style="--i:1">
         <sync-wave mode="detail" .data=${d} .lines=${L} .anchors=${anchorSet} .sel=${s.sel}></sync-wave>
         <sync-wave mode="overview" .data=${d} .lines=${L} .anchors=${anchorSet} .sel=${s.sel}></sync-wave>
       </div>
       <div class="sctl rise" style="--i:2">
-        <button class="btn icon" @click=${() => player.toggle()} aria-label="Tocar">${icon(st.player?.playing ? "pause" : "play")}</button>
+        <button class="btn icon" @click=${() => player.toggle()} aria-label=${tr("ui.player.play")}>${icon(st.player?.playing ? "pause" : "play")}</button>
         <span class="mono-num time">${fmtTimePrecise(t / 1000)} <span class="muted">/ ${fmtTime(d.duration)}</span></span>
-        ${d.multiplexed ? html`<div class="seg">${[["both", "Ambos"], ["left", "Instr."], ["right", "Voz"]].map(([k, l]) =>
-          html`<button aria-pressed=${(st.player?.channel || "both") === k} @click=${() => player.setChannel(k)}>${l}</button>`)}</div>` : ""}
+        ${d.multiplexed ? html`<div class="seg">${[["both", "ui.player.both"], ["left", "ui.player.instr"], ["right", "ui.player.voice"]].map(([k, l]) =>
+          html`<button aria-pressed=${(st.player?.channel || "both") === k} @click=${() => player.setChannel(k)}>${tr(l)}</button>`)}</div>` : ""}
         <span class="grow"></span>
-        <span class="small dim">Deslocar</span>
-        <div class="seg">${[[-1000, "−1 s"], [-100, "−0,1"], [100, "+0,1"], [1000, "+1 s"]].map(([ms, l]) =>
+        <span class="small dim">${tr("ui.sync.shift")}</span>
+        <div class="seg">${[[-1000, "−1 s"], [-100, "−" + fixed(.1, 1)], [100, "+" + fixed(.1, 1)], [1000, "+1 s"]].map(([ms, l]) =>
           html`<button @click=${() => nudge(ms)}>${l}</button>`)}</div>
-        <span class="mono-num offset ${s.offset ? "" : "muted"}">${s.offset >= 0 ? "+" : ""}${(s.offset / 1000).toFixed(2)} s</span>
-        ${d.multiplexed ? html`<button class="btn ghost sm" @click=${suggest}>${icon("spark")} Sugerir</button>` : ""}
-        <button class="btn quiet sm" ?disabled=${!nAnch} @click=${() => edit({ anchors: {} })}>Limpar ${nAnch || ""} âncora${nAnch === 1 ? "" : "s"}</button>
+        <span class="mono-num offset ${s.offset ? "" : "muted"}">${s.offset >= 0 ? "+" : ""}${fixed(s.offset / 1000)} s</span>
+        ${d.multiplexed ? html`<button class="btn ghost sm" @click=${suggest}>${icon("spark")} ${tr("ui.sync.suggest")}</button>` : ""}
+        <button class="btn quiet sm" ?disabled=${!nAnch} @click=${() => edit({ anchors: {} })}>${nAnch ? tr("ui.sync.clear_anchors", { count: nAnch }) : tr("ui.sync.clear_anchors_none")}</button>
       </div>
       <div class="slines rise" style="--i:3">
         ${L.map((l, k) => {
@@ -232,9 +232,9 @@ export const sync = {
         })}
       </div>
       <p class="keyhint muted small">
-        <kbd>Espaço</kbd> tocando: marca a linha selecionada como âncora (desce sozinha) · parado: toca
-        · <kbd>↑</kbd><kbd>↓</kbd> escolher linha · <kbd>Enter</kbd> tocar dela · <kbd>[</kbd><kbd>]</kbd> ±0,1 s
-        · <kbd>⌫</kbd> tirar âncora · arraste a onda para voltar/avançar</p>
+        <kbd>${tr("ui.help.space_key")}</kbd> ${tr("ui.sync.hint_space")}
+        · <kbd>↑</kbd><kbd>↓</kbd> ${tr("ui.sync.hint_pick")} · <kbd>Enter</kbd> ${tr("ui.sync.hint_enter")} · <kbd>[</kbd><kbd>]</kbd> ±${fixed(.1, 1)} s
+        · <kbd>⌫</kbd> ${tr("ui.sync.hint_anchor")} · ${tr("ui.sync.hint_drag")}</p>
     </div>`;
   },
 };

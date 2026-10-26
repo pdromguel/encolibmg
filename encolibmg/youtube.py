@@ -10,6 +10,7 @@ from threading import Event
 from yt_dlp import YoutubeDL
 
 from encolibmg.errors import Cancelled
+from encolibmg.i18n import t
 
 MAX_DURATION_DIFF = 8.0
 UNWANTED = ["karaoke", "instrumental", "cover", "live", "ao vivo", "8d", "slowed",
@@ -116,5 +117,5 @@ def download_video(url: str, dest_dir: Path, cancel: Event | None = None, on_pro
     _run(url, {**opts, "outtmpl": str(dest_dir / "video.%(ext)s")}, cancel, on_progress)
     found = sorted(dest_dir.glob("video.*"))
     if not found:
-        raise RuntimeError("O download do vídeo não gerou arquivo.")
+        raise RuntimeError(t("err.video_empty"))
     return found[0]

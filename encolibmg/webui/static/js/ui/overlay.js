@@ -1,6 +1,7 @@
 // Modal dialogs and small popup menus, rendered with lit-html into their own containers.
 import { icon } from "../fx/icons.js";
 import { html, render } from "../../vendor/lit-html.js";
+import { t } from "../i18n.js";
 
 let openModals = 0;
 export const modalOpen = () => openModals > 0;
@@ -33,7 +34,7 @@ export function modal(content, { wide = false } = {}) {
     const draw = () => render(html`
       <div class="modal-wrap brackets on ${wide ? "wide" : ""}">
         <div class="modal" role="dialog" aria-modal="true">
-          <button class="btn quiet sm icon x" aria-label="Fechar" @click=${() => close(undefined)}>${icon("close")}</button>
+          <button class="btn quiet sm icon x" aria-label=${t("ui.common.close")} @click=${() => close(undefined)}>${icon("close")}</button>
           ${content(close, draw)}
         </div>
       </div>`, scrim);
@@ -43,18 +44,18 @@ export function modal(content, { wide = false } = {}) {
 }
 
 /** Simple confirm dialog. Resolves true/false. */
-export function confirmDialog(title, text, { ok = "Confirmar", danger = false } = {}) {
+export function confirmDialog(title, text, { ok = t("ui.dialog.confirm"), danger = false } = {}) {
   return modal(close => html`
     <h2>${title}</h2>
     <p class="lead">${text}</p>
     <div class="foot">
-      <button class="btn ghost" @click=${() => close(false)}>Cancelar</button>
+      <button class="btn ghost" @click=${() => close(false)}>${t("ui.common.cancel")}</button>
       <button class="btn ${danger ? "danger" : ""}" autofocus @click=${() => close(true)}>${ok}</button>
     </div>`).then(v => !!v);
 }
 
 /** Prompt with one or more text fields. Resolves {name: value} or undefined. */
-export function promptDialog(title, fields, { lead = "", ok = "Salvar" } = {}) {
+export function promptDialog(title, fields, { lead = "", ok = t("ui.common.save") } = {}) {
   const values = Object.fromEntries(fields.map(f => [f.name, f.value ?? ""]));
   return modal(close => html`
     <h2>${title}</h2>
@@ -65,14 +66,14 @@ export function promptDialog(title, fields, { lead = "", ok = "Salvar" } = {}) {
         <input class="field" ?autofocus=${i === 0} .value=${values[f.name]} placeholder=${f.placeholder || ""}
                @input=${e => values[f.name] = e.target.value}></div>`)}
       <div class="foot">
-        <button type="button" class="btn ghost" @click=${() => close(undefined)}>Cancelar</button>
+        <button type="button" class="btn ghost" @click=${() => close(undefined)}>${t("ui.common.cancel")}</button>
         <button type="submit" class="btn">${ok}</button>
       </div>
     </form>`);
 }
 
 let menuEl = null;
-/** Popup menu next to `anchor`. items: [{label, run, kbd?}] or {section: "título"}. */
+/** Popup menu next to `anchor`. items: [{label, run, kbd?}] or {section: "title"}. */
 export function menu(anchor, items) {
   closeMenu();
   menuEl = document.createElement("div");

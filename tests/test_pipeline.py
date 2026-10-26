@@ -63,7 +63,7 @@ def test_add_song_writes_pair(lib, fakes):
     assert sorted(leftovers(lib)) == ["Adele - Hello.lrc", "Adele - Hello.multiplexed.mp3"]
     assert (lib.path / "Adele - Hello.lrc").read_text(encoding="utf-8") == "[00:01.00] Hello\n"
     assert ("tags", ("Adele", "Hello")) in fakes
-    assert steps[0] == "buscando áudio" and steps[-1] == "salvando"
+    assert steps[0] == "step.search_audio" and steps[-1] == "step.save"  # keys; JobManager translates
 
 
 def test_add_song_existing_raises_before_download(lib, fakes):

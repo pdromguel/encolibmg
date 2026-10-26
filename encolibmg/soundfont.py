@@ -15,6 +15,7 @@ from send2trash import send2trash
 from encolibmg.files import download, rel, unique_path
 from encolibmg.library import Library
 from encolibmg.manifest import ensure_additional, read_manifest, write_manifest
+from encolibmg.i18n import t
 
 FOLDER = "SoundFonts"
 EXTS = {".sf2", ".sf3", ".dls"}
@@ -39,7 +40,7 @@ def _set(lib: Library, value: str | None) -> None:
 def install_soundfont(lib: Library, src: Path) -> str:
     src = Path(src)
     if src.suffix.lower() not in EXTS:
-        raise ValueError(f"O Encore aceita SoundFont .sf2, .sf3 ou .dls (não {src.suffix}).")
+        raise ValueError(t("err.soundfont_ext", ext=src.suffix))
     folder = lib.path / FOLDER
     same = folder / src.name
     if same.exists() and same.stat().st_size == src.stat().st_size:

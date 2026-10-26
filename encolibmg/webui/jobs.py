@@ -9,6 +9,7 @@ import time
 from typing import Any, Callable
 
 from encolibmg.errors import Cancelled
+from encolibmg.i18n import t
 
 log = logging.getLogger(__name__)
 MIN_INTERVAL = 0.05  # s between progress events (≤ 20/s)
@@ -37,7 +38,7 @@ class JobManager:
         """`fn(progress, cancel)` runs in a thread; its return value must be JSON-able."""
         with self._lock:
             if self.current:
-                raise Busy(f"Aguarde: “{self.current['label']}” ainda está rodando.")
+                raise Busy(t("err.busy", label=self.current["label"]))
             job_id = next(self._ids)
             self._cancel = cancel = threading.Event()
             self.current = {"id": job_id, "label": label, "kind": kind, "step": label, "frac": None}
@@ -45,13 +46,16 @@ class JobManager:
         last = {"t": 0.0, "step": None}
 
         def progress(step: str, frac: float | None = None):
+            """`step` is an i18n key ("step.download") or ready text; the UI gets both the text and the key."""
             now = time.monotonic()
             if step == last["step"] and now - last["t"] < MIN_INTERVAL and frac not in (None, 1.0):
                 return
             last.update(t=now, step=step)
+            key = step if step.startswith("step.") else None
+            text = t(step) if key else step
             if self.current:
-                self.current.update(step=step, frac=frac)
-            self._emit("job", {"type": "progress", "id": job_id, "step": step, "frac": frac})
+                self.current.update(step=text, key=key, frac=frac)
+            self._emit("job", {"type": "progress", "id": job_id, "step": text, "key": key, "frac": frac})
 
         def run():
             try:

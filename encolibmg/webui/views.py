@@ -10,21 +10,21 @@ from encolibmg.library import AUDIO_EXTS, Library, Track, kind_label
 def badges(t: Track) -> list[str]:
     out = []
     if t.kind == "orphan":
-        out.append("⚠")
+        out.append("ORPHAN")
     if t.multiplexed:
         out.append("MP")
     elif t.exts & AUDIO_EXTS:
-        out.append("ÁUDIO")
+        out.append("AUDIO")
     if ".lrc" in t.exts:
         out.append("LRC")
     if ".cdg" in t.exts:
         out.append("CDG")
     if t.has_guide:
-        out.append("GUIA")
+        out.append("GUIDE")
     if t.kind == "mtv":
         out.append("MTV")
     elif t.has_video:
-        out.append("CLIPE")
+        out.append("CLIP")
     if t.kind == "midi":
         out.append("MIDI")
     return out
@@ -70,23 +70,23 @@ def video_dict(v, target: float | None = None) -> dict:
 
 
 def issue_dict(i, idx: int, lib: Library) -> dict:
-    from encolibmg.checker import KIND_LABEL
+    from encolibmg.checker import kind_label as issue_label
 
     try:
         rel = i.path.relative_to(lib.path).as_posix()
     except ValueError:
         rel = i.path.name
-    return {"id": idx, "kind": i.kind, "label": KIND_LABEL.get(i.kind, i.kind), "file": rel,
+    return {"id": idx, "kind": i.kind, "label": issue_label(i.kind), "file": rel,
             "message": i.message, "fixable": i.fixable, "base": i.track.base if i.track else None}
 
 
 def import_dict(it, idx: int) -> dict:
-    from encolibmg.importer import KIND_LABEL
+    from encolibmg.importer import kind_label as import_label, status_text
 
     return {"id": idx, "artist": it.artist, "title": it.title, "kind": it.kind,
-            "kind_label": KIND_LABEL.get(it.kind, it.kind), "source": it.main.name,
-            "companions": [c.name for c in it.companions], "status": it.status, "selected": it.selected,
-            "base": it.base}
+            "kind_label": import_label(it.kind), "source": it.main.name,
+            "companions": [c.name for c in it.companions], "status": it.status,
+            "status_text": status_text(it.status), "selected": it.selected, "base": it.base}
 
 
 def human_size(n: int) -> str:

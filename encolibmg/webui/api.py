@@ -16,12 +16,12 @@ from pathlib import Path
 
 import numpy as np
 
-from encolibmg import __version__, checker, importer, pipeline, soundfont, visual, youtube
+from encolibmg import __version__, checker, i18n, importer, pipeline, soundfont, visual, youtube
 from encolibmg.audio.convert import duration as media_duration
-from encolibmg.audio.player import SR, decode
-from encolibmg.errors import AlreadyExists
+from encolibmg.audio.decode import SR, decode
 from encolibmg.guide.build import build_guide
 from encolibmg.guide.midi import read_guide
+from encolibmg.i18n import t as tr
 from encolibmg.library import AUDIO_EXTS, VIDEO_EXTS, Library, LibraryError, Track, inside
 from encolibmg.lyrics import lrclib
 from encolibmg.lyrics.match import read_lrc
@@ -31,6 +31,11 @@ from encolibmg.paths import backup_file, latest_backup, load_config, save_config
 from encolibmg.webui import views
 
 log = logging.getLogger(__name__)
+
+
+def _step(s: str) -> str:
+    """Progress steps from the engine are i18n keys; composite labels translate them here."""
+    return tr(s) if s.startswith("step.") else s
 PEAK_RATE = 25      # waveform points per second (40 ms), enough for the 12 s zoom
 PEAK_MAX = 15000
 
@@ -67,6 +72,7 @@ class Api:
         self._items: list = []
         self._import_tmp: Path | None = None
         self._peaks: dict[str, tuple[float, dict]] = {}
+        i18n.set_language(load_config().get("language", "auto"))
         last = load_config().get("library")
         if last:
             try:
@@ -83,7 +89,7 @@ class Api:
 
     def _need(self) -> Library:
         if self._lib is None:
-            raise NoLibrary("Abra ou crie uma biblioteca primeiro.")
+            raise NoLibrary(tr("err.no_library"))
         return self._lib
 
     def _set_library(self, lib: Library):
@@ -104,7 +110,7 @@ class Api:
         for t in self._need().scan():
             if t.base.lower() == key:
                 return t
-        raise KeyError(f"A faixa '{base}' não está mais na biblioteca.")
+        raise KeyError(tr("err.track_missing", base=base))
 
     def _job(self, label: str, fn, kind: str = "job") -> dict:
         def wrapped(progress, cancel):
@@ -122,6 +128,23 @@ class Api:
 
     def _url(self, p: Path | None) -> str | None:
         return self._server.media_url(p) if p else None
+
+    # --- language -------------------------------------------------------------------
+    @api
+    def i18n(self):
+        """Current language, the saved setting ("auto" or a language) and the full catalog."""
+        return {"lang": i18n.language(), "setting": load_config().get("language", "auto"),
+                "supported": list(i18n.SUPPORTED), "catalog": i18n.catalog(i18n.language())}
+
+    @api
+    def set_language(self, setting: str):
+        if setting != "auto" and setting not in i18n.SUPPORTED:
+            raise ValueError(setting)
+        cfg = load_config()
+        cfg["language"] = setting
+        save_config(cfg)
+        i18n.set_language(setting)
+        return self.i18n()["data"]
 
     # --- app / library ------------------------------------------------------------
     @api
@@ -152,7 +175,7 @@ class Api:
         folder = Path(path)
         if folder.name.lower() != "encorelibrary" and not (folder / "manifest.json").exists():
             folder = folder / "EncoreLibrary"
-        self._set_library(Library.create(folder, title.strip() or "Minha Biblioteca"))
+        self._set_library(Library.create(folder, title.strip() or tr("name.default_library")))
         return self.state()["data"]
 
     @api
@@ -164,7 +187,7 @@ class Api:
         """Opens a folder of the library in Explorer. Never a file: startfile would run it."""
         target = inside(self._need().path, rel)
         if not target.is_dir():
-            raise ValueError("Só pastas da biblioteca podem ser abertas.")
+            raise ValueError(tr("err.only_folders"))
         os.startfile(target)
         return True
 
@@ -180,7 +203,7 @@ class Api:
 
         host = urlsplit(url).hostname or ""
         if urlsplit(url).scheme != "https" or not (host == "youtu.be" or host.endswith("youtube.com")):
-            raise ValueError("Só links do YouTube podem ser abertos.")
+            raise ValueError(tr("err.only_youtube"))
         webbrowser.open(url)
         return True
 
@@ -206,7 +229,7 @@ class Api:
     @api
     def add_mtv(self, artist: str, title: str, video_id: str):
         lib, v = self._need(), self._videos[video_id]
-        return self._job(f"MTV {artist} - {title}", lambda p, c: views.track_dict(
+        return self._job(tr("job.mtv", artist=artist, title=title), lambda p, c: views.track_dict(
             pipeline.add_mtv(lib, artist, title, v, p, c)), "add")
 
     # --- library actions -------------------------------------------------------------------
@@ -227,7 +250,7 @@ class Api:
     @api
     def track_convert(self, base: str):
         lib, t = self._need(), self._track(base)
-        return self._job(f"Multiplex: {t.base}", lambda p, c: views.track_dict(
+        return self._job(tr("job.multiplex", base=t.base), lambda p, c: views.track_dict(
             pipeline.convert_to_multiplex(lib, t, p, c)))
 
     @api
@@ -240,14 +263,14 @@ class Api:
             for n, t in enumerate(tracks):
                 label = f"{n + 1}/{len(tracks)} {t.base}" if len(tracks) > 1 else t.base
                 try:
-                    _, st = build_guide(lib, t, lambda s, f=None, l=label: progress(f"{l} · {s}", f), cancel)
+                    _, st = build_guide(lib, t, lambda s, f=None, l=label: progress(f"{l} · {_step(s)}", f), cancel)
                     out.append({"base": t.base, "stats": st})
                 except Exception as e:
                     if type(e).__name__ == "Cancelled":
                         raise
                     out.append({"base": t.base, "error": str(e)})
             return out
-        return self._job("Guia MIDI", work, "guide")
+        return self._job(tr("job.guide"), work, "guide")
 
     @api
     def find_clip(self, base: str):
@@ -261,7 +284,7 @@ class Api:
     @api
     def add_clip(self, base: str, video_id: str):
         lib, t, v = self._need(), self._track(base), self._videos[video_id]
-        return self._job(f"Clipe: {t.base}", lambda p, c: views.track_dict(pipeline.add_clip(lib, t, v, p, c)))
+        return self._job(tr("job.clip", base=t.base), lambda p, c: views.track_dict(pipeline.add_clip(lib, t, v, p, c)))
 
     @api
     def media(self, base: str, which: str = "audio"):
@@ -297,7 +320,7 @@ class Api:
         t = self._track(base)
         lrc = t.file_with({".lrc"})
         if lrc is None:
-            raise ValueError("Esta faixa não tem .lrc.")
+            raise ValueError(tr("err.no_lrc"))
         mp = next((f for f in t.files if ".multiplexed." in f.name.lower()), None)
         audio = mp or t.file_with(AUDIO_EXTS) or t.file_with(VIDEO_EXTS)
         info = self._peaks_for(audio, 1 if mp else -1)
@@ -321,7 +344,7 @@ class Api:
         lrc = self._track(base).file_with({".lrc"})
         bak = latest_backup(lrc.name)
         if bak is None:
-            raise LookupError("Não há backup desta letra.")
+            raise LookupError(tr("err.no_backup"))
         shutil.copy2(bak, lrc)
         bak.unlink()
         return {"lines": [{"ms": l.ms, "text": l.text} for l in parse_lrc(read_lrc(lrc))],
@@ -333,7 +356,7 @@ class Api:
         t = self._track(base)
         gpath = next((f for f in t.files if ".guide." in f.name.lower() or ".melody." in f.name.lower()), None)
         if gpath is None:
-            raise LookupError("Esta faixa ainda não tem guia MIDI.")
+            raise LookupError(tr("err.no_guide"))
         g = read_guide(gpath)
         mp = next((f for f in t.files if ".multiplexed." in f.name.lower()), None)
         audio = mp or t.file_with(AUDIO_EXTS)
@@ -348,10 +371,10 @@ class Api:
         lib = self._need()
 
         def work(progress, cancel):
-            progress("verificando", None)
+            progress("step.check", None)
             self._issues = checker.check(lib, include_loudness=loudness, cancel=cancel, on_progress=progress)
             return [views.issue_dict(i, n, lib) for n, i in enumerate(self._issues)]
-        return self._job("Verificação da biblioteca", work, "check")
+        return self._job(tr("job.check"), work, "check")
 
     @api
     def fix(self, ids: list[int]):
@@ -363,13 +386,13 @@ class Api:
             for n, i in enumerate(todo):
                 if cancel.is_set():
                     break
-                progress(f"corrigindo {n + 1}/{len(todo)}", n / max(1, len(todo)))
+                progress(tr("step.fixing", n=n + 1, total=len(todo)), n / max(1, len(todo)))
                 try:
                     out[i] = {"ok": True, "message": checker.fix(lib, issues[i])}
                 except Exception as e:
                     out[i] = {"ok": False, "message": str(e) or type(e).__name__}
             return out
-        return self._job("Correções", work, "fix")
+        return self._job(tr("job.fix"), work, "fix")
 
     # --- import -------------------------------------------------------------------------------------
     @api
@@ -419,15 +442,15 @@ class Api:
                 progress(label, k / max(1, len(chosen)))
                 try:
                     out[n] = importer.import_item(lib, it, cancel=cancel,
-                                                  on_progress=lambda s, f=None, l=label: progress(f"{l} · {s}", f),
+                                                  on_progress=lambda s, f=None, l=label: progress(f"{l} · {_step(s)}", f),
                                                   **kw)
                 except Exception as e:
                     if type(e).__name__ == "Cancelled":
                         raise
-                    out[n] = f"✖ {e}"
+                    out[n] = f"error:{e}"
                 it.status, it.selected = out[n], False
             return {"results": out, "items": [views.import_dict(x, i) for i, x in enumerate(self._items)]}
-        return self._job("Importação", work, "import")
+        return self._job(tr("job.import"), work, "import")
 
     # --- visual & sound ------------------------------------------------------------------------------
     @api
@@ -457,17 +480,17 @@ class Api:
         import webview
 
         files = self._dialog(webview.FileDialog.OPEN, True,
-                             ("Vídeos (*.mp4;*.mkv;*.webm;*.avi;*.mov;*.wmv;*.m4v)", "Todos (*.*)"))
+                             (tr("dialog.videos") + " (*.mp4;*.mkv;*.webm;*.avi;*.mov;*.wmv;*.m4v)", tr("dialog.all") + " (*.*)"))
         if not files:
             return None
         lib = self._need()
 
         def work(progress, cancel):
             for n, f in enumerate(files):
-                progress(f"preparando {Path(f).name}", n / len(files))
+                progress(tr("step.prepare_file", name=Path(f).name), n / len(files))
                 visual.add_bgv_file(lib, category, Path(f))
             return len(files)
-        return self._job(f"Vídeos de fundo: {category}", work, "visual")
+        return self._job(tr("job.bgv_files", category=category), work, "visual")
 
     @api
     def bgv_search(self, query: str):
@@ -478,7 +501,7 @@ class Api:
     @api
     def bgv_add_video(self, category: str, video_id: str):
         lib, v = self._need(), self._videos[video_id]
-        return self._job(f"Vídeo de fundo: {v.title[:40]}", lambda p, c: visual.add_bgv_video(lib, category, v, p, c),
+        return self._job(tr("job.bgv_video", title=v.title[:40]), lambda p, c: visual.add_bgv_video(lib, category, v, p, c),
                          "visual")
 
     @api
@@ -490,7 +513,7 @@ class Api:
     def bumper_add(self):
         import webview
 
-        files = self._dialog(webview.FileDialog.OPEN, True, ("Imagens (*.png;*.jpg;*.jpeg;*.webp;*.gif)",))
+        files = self._dialog(webview.FileDialog.OPEN, True, (tr("dialog.images") + " (*.png;*.jpg;*.jpeg;*.webp;*.gif)",))
         for f in files:
             visual.add_bumper(self._need(), Path(f))
         return self.visual_state()["data"]
@@ -504,11 +527,11 @@ class Api:
     def boot_set(self):
         import webview
 
-        files = self._dialog(webview.FileDialog.OPEN, False, ("Vídeos (*.mp4;*.mkv;*.webm;*.avi;*.mov)",))
+        files = self._dialog(webview.FileDialog.OPEN, False, (tr("dialog.videos") + " (*.mp4;*.mkv;*.webm;*.avi;*.mov)",))
         if not files:
             return None
         lib = self._need()
-        return self._job("Vídeo de abertura", lambda p, c: visual.set_boot_video(lib, Path(files[0])), "visual")
+        return self._job(tr("job.boot"), lambda p, c: visual.set_boot_video(lib, Path(files[0])), "visual")
 
     @api
     def boot_clear(self):
@@ -519,7 +542,7 @@ class Api:
     def narration_set(self, lo: int, hi: int):
         import webview
 
-        files = self._dialog(webview.FileDialog.OPEN, False, ("Áudio (*.mp3;*.wav;*.ogg;*.m4a;*.flac)",))
+        files = self._dialog(webview.FileDialog.OPEN, False, (tr("dialog.audio") + " (*.mp3;*.wav;*.ogg;*.m4a;*.flac)",))
         if not files:
             return None
         visual.set_narration(self._need(), int(lo), int(hi), Path(files[0]))
@@ -542,8 +565,8 @@ class Api:
     @api
     def soundfont_download(self):
         lib = self._need()
-        return self._job("Baixando GeneralUser GS", lambda p, c: soundfont.download_generaluser(
-            lib, lambda f: p("baixando SoundFont", f), c), "visual")
+        return self._job(tr("job.soundfont"), lambda p, c: soundfont.download_generaluser(
+            lib, lambda f: p("step.download_soundfont", f), c), "visual")
 
     @api
     def soundfont_remove(self):
@@ -555,14 +578,14 @@ class Api:
     def settings_get(self):
         data = read_manifest(self._need().path)
         return {"title": data.get("title", ""), "description": data.get("description", ""),
-                "flags": [{"key": k, "label": label, "value": flag_value(data, k)} for k, label, _ in FLAGS]}
+                "flags": [{"key": k, "label": tr(label), "value": flag_value(data, k)} for k, label, _ in FLAGS]}
 
     @api
     def settings_save(self, payload: dict):
         lib = self._need()
         title = str(payload.get("title", "")).strip()
         if not title:
-            raise ValueError("O nome não pode ficar vazio.")
+            raise ValueError(tr("err.empty_name"))
         data = read_manifest(lib.path)
         data["title"], data["description"] = title, str(payload.get("description", "")).strip()
         for f in payload.get("flags", []):

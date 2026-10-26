@@ -71,3 +71,13 @@ def test_separate_real_demucs(tmp_path):
     inst, voc = separate(src, tmp_path / "work", on_progress=seen.append)
     assert inst.name == "no_vocals.wav" and inst.exists()
     assert voc.name == "vocals.wav" and voc.exists()
+
+
+def test_decode_real_file(tmp_path):
+    from encolibmg.audio.decode import SR, decode
+
+    f = tmp_path / "a.mp3"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=d=1", str(f)], check=True)
+    data = decode(f)
+    assert data.shape[1] == 2
+    assert len(data) / SR == pytest.approx(1.0, abs=0.1)

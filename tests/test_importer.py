@@ -93,7 +93,7 @@ def test_import_copy_converts_and_does_not_overwrite(lib, tmp_path):
     (src / "Adele - Hello.lrc").write_text("[offset:500]\n[00:01.00]Hello", encoding="utf-8")
     items = scan_source(src, tmp_path / "tmp")
     results = [import_item(lib, i) for i in items]
-    assert results == ["importada (Áudio + CDG)", "importada (Áudio + LRC)"]
+    assert results == ["imported:cdg", "imported:audio_lrc"]
     assert lib_files(lib) == ["ABBA - Waterloo.cdg", "ABBA - Waterloo.mp3",
                               "Adele - Hello.lrc", "Adele - Hello.mp3"]
     assert (lib.path / "Adele - Hello.lrc").read_text(encoding="utf-8") == "[00:00.50] Hello\n"
@@ -101,14 +101,14 @@ def test_import_copy_converts_and_does_not_overwrite(lib, tmp_path):
     # second import of the same folder: nothing new
     again = scan_source(src, tmp_path / "tmp2")
     mark_existing(lib, again)
-    assert [i.status for i in again] == ["já existe", "já existe"]
-    assert [import_item(lib, i) for i in again] == ["já existe", "já existe"]
+    assert [i.status for i in again] == ["exists", "exists"]
+    assert [import_item(lib, i) for i in again] == ["exists", "exists"]
 
 
 def test_import_audio_without_lyrics_is_skipped(lib, tmp_path):
     sine(tmp_path / "src" / "Lone - Audio.mp3")
     item = scan_source(tmp_path / "src", tmp_path / "tmp")[0]
-    assert import_item(lib, item, search=lambda q: []) == "sem letra (não importada)"
+    assert import_item(lib, item, search=lambda q: []) == "no_lyrics"
     assert lib_files(lib) == []
 
 
@@ -116,7 +116,7 @@ def test_import_audio_finds_lyrics(lib, tmp_path):
     sine(tmp_path / "src" / "Lone - Audio.mp3", seconds=3)
     item = scan_source(tmp_path / "src", tmp_path / "tmp")[0]
     cand = LyricsCandidate(1, "Lone", "Audio", "", 3.2, "[00:01.0]la", None)
-    assert import_item(lib, item, search=lambda q: [cand]) == "importada (Áudio + LRC)"
+    assert import_item(lib, item, search=lambda q: [cand]) == "imported:audio_lrc"
     assert lib_files(lib) == ["Lone - Audio.lrc", "Lone - Audio.mp3"]
 
 
@@ -137,7 +137,7 @@ def test_import_multiplex_uses_local_pipeline(lib, tmp_path, monkeypatch):
     sine(tmp_path / "src" / "Adele - Hello.flac")
     (tmp_path / "src" / "Adele - Hello.lrc").write_text("[00:01.00]x", encoding="utf-8")
     item = scan_source(tmp_path / "src", tmp_path / "tmp")[0]
-    assert import_item(lib, item, make_multiplex=True) == "importada (Multiplex + LRC)"
+    assert import_item(lib, item, make_multiplex=True) == "imported:multiplex"
     assert calls == [("Adele - Hello.flac", "Adele", "Hello")]
 
 
@@ -146,4 +146,17 @@ def test_duplicates_inside_source_are_flagged(lib, tmp_path):
     sine(tmp_path / "src" / "b" / "Adele - Hello.mp4")
     items = scan_source(tmp_path / "src", tmp_path / "tmp")
     mark_existing(lib, items)
-    assert [i.status for i in items] == ["", "repetida na origem"]
+    assert [i.status for i in items] == ["", "duplicate"]
+
+
+def test_status_text_in_both_languages():
+    from encolibmg import i18n
+    from encolibmg.importer import status_text
+
+    assert status_text("imported:cdg") == "importada (Áudio + CDG)"
+    assert status_text("exists") == "já existe"
+    assert status_text("error:disco cheio") == "✖ disco cheio"
+    assert status_text("") == ""
+    i18n.set_language("en")
+    assert status_text("imported:audio_lrc") == "imported (Audio + LRC)"
+    assert status_text("no_lyrics") == "no lyrics (not imported)"

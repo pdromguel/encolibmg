@@ -24,6 +24,7 @@ from encolibmg.audio.convert import convert_audio, convert_video
 from encolibmg.files import rel, safe_name, unique_path
 from encolibmg.library import Library, inside
 from encolibmg.manifest import ensure_additional, read_manifest, write_manifest
+from encolibmg.i18n import t
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 SFX_EXTS = {".mp3", ".wav", ".ogg", ".m4a"}
@@ -61,7 +62,7 @@ def _find(cats: list[dict], name: str) -> dict:
     for c in cats:
         if c.get("BGV_CATEGORY", "").casefold() == name.casefold():
             return c
-    raise KeyError(f"Categoria '{name}' não existe.")
+    raise KeyError(t("err.category_missing", name=name))
 
 
 def add_category(lib: Library, name: str) -> str:
@@ -69,7 +70,7 @@ def add_category(lib: Library, name: str) -> str:
     data = _load(lib)
     cats = _extra(data)["bgvCategories"]
     if any(c.get("BGV_CATEGORY", "").casefold() == name.casefold() for c in cats):
-        raise ValueError(f"A categoria '{name}' já existe.")
+        raise ValueError(t("err.category_exists", name=name))
     cats.append({"BGV_CATEGORY": name, "BGV_LIST": []})
     write_manifest(lib.path, data)
     return name
@@ -82,7 +83,7 @@ def rename_category(lib: Library, old: str, new: str) -> str:
     cats = _extra(data)["bgvCategories"]
     cat = _find(cats, old)
     if new.casefold() != old.casefold() and any(c["BGV_CATEGORY"].casefold() == new.casefold() for c in cats):
-        raise ValueError(f"A categoria '{new}' já existe.")
+        raise ValueError(t("err.category_exists", name=new))
     cat["BGV_CATEGORY"] = new
     write_manifest(lib.path, data)
     return new
@@ -122,7 +123,7 @@ def _to_bgv(src: Path, dest: Path) -> None:
          "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(dest)],
         capture_output=True, text=True, encoding="utf-8", errors="replace", creationflags=_NO_WINDOW)
     if proc.returncode != 0:
-        raise RuntimeError(f"ffmpeg falhou ao converter {src.name}:\n{proc.stderr[-800:]}")
+        raise RuntimeError(t("err.ffmpeg_convert", name=src.name, detail=proc.stderr[-800:]))
 
 
 def add_bgv_file(lib: Library, category: str, src: Path, move: bool = False) -> str:
@@ -153,12 +154,12 @@ def add_bgv_video(lib: Library, category: str, video: youtube.VideoCandidate, on
                   cancel: Event | None = None) -> str:
     progress = on_progress or (lambda step, frac=None: None)
     with tempfile.TemporaryDirectory(prefix=".encore-tmp-", dir=lib.path) as tmp:
-        progress("baixando vídeo", 0.0)
-        src = youtube.download_video(video.url, Path(tmp), cancel, lambda f: progress("baixando vídeo", f),
+        progress("step.download_video", 0.0)
+        src = youtube.download_video(video.url, Path(tmp), cancel, lambda f: progress("step.download_video", f),
                                      video_only=True, section=bgv_section(video.duration))
         named = src.with_name(safe_name(video.title)[:80] + src.suffix)
         src.rename(named)
-        progress("preparando vídeo", None)
+        progress("step.prepare_video", None)
         return add_bgv_file(lib, category, named, move=True)
 
 
@@ -180,7 +181,7 @@ def bumpers(lib: Library) -> list[str]:
 def add_bumper(lib: Library, src: Path) -> str:
     src = Path(src)
     if src.suffix.lower() not in IMAGE_EXTS:
-        raise ValueError(f"Use uma imagem {', '.join(sorted(IMAGE_EXTS))}.")
+        raise ValueError(t("err.image_ext", exts=", ".join(sorted(IMAGE_EXTS))))
     dest = unique_path(lib.path / "Bumpers", safe_name(src.name))
     shutil.copy2(src, dest)
     data = _load(lib)
@@ -239,12 +240,12 @@ def narrations(lib: Library) -> list[dict]:
 def set_narration(lib: Library, lo: int, hi: int, src: Path) -> str:
     lo, hi = int(lo), int(hi)
     if not 0 <= lo <= hi <= 100:
-        raise ValueError("A faixa de nota vai de 0 a 100, com o mínimo ≤ máximo.")
+        raise ValueError(t("err.narration_range"))
     current = narrations(lib)
     for n in current:
         same = n["min"] == lo and n["max"] == hi
         if not same and lo <= n["max"] and n["min"] <= hi:
-            raise ValueError(f"Sobrepõe a faixa {n['min']}–{n['max']} já configurada.")
+            raise ValueError(t("err.narration_overlap", min=n["min"], max=n["max"]))
     src = Path(src)
     folder = lib.path / "Narrations"
     folder.mkdir(parents=True, exist_ok=True)

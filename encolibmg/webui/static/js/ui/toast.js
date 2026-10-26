@@ -1,5 +1,7 @@
 // Notifications, top-right. kind: ok | bad | warn | info. Optional action buttons.
 
+import { t } from "../i18n.js";
+
 const LIFE = { ok: 3800, info: 4200, warn: 6000, bad: 8000 };
 
 export function toast(message, { kind = "info", detail = "", actions = [], life } = {}) {
@@ -8,7 +10,8 @@ export function toast(message, { kind = "info", detail = "", actions = [], life 
   const el = document.createElement("div");
   el.className = `toast ${kind}`;
   el.setAttribute("role", kind === "bad" ? "alert" : "status");
-  el.innerHTML = `<span class="sq"></span><div class="msg"></div><button class="btn quiet sm icon" aria-label="Fechar">✕</button>`;
+  el.innerHTML = `<span class="sq"></span><div class="msg"></div><button class="btn quiet sm icon" aria-label="">✕</button>`;
+  el.querySelector("button").setAttribute("aria-label", t("ui.common.close"));
   el.querySelector(".msg").textContent = message;
   if (detail) {
     const small = document.createElement("small");

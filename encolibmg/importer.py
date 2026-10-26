@@ -17,6 +17,7 @@ from encolibmg.audio import loudness
 from encolibmg.audio.convert import (UNSUPPORTED_AUDIO, UNSUPPORTED_VIDEO, convert_audio,
                                       convert_video, duration)
 from encolibmg.errors import Cancelled
+from encolibmg.i18n import t
 from encolibmg.library import AUDIO_EXTS, MIDI_EXTS, VIDEO_EXTS, Library, base_name
 from encolibmg.lyrics.match import find_synced, read_lrc
 from encolibmg.lyrics.normalize import normalize_lrc
@@ -27,14 +28,20 @@ ALL_AUDIO = AUDIO_EXTS | UNSUPPORTED_AUDIO
 ALL_VIDEO = VIDEO_EXTS | UNSUPPORTED_VIDEO
 COMPANIONS = {".cdg", ".lrc"} | MIDI_EXTS
 
-KIND_LABEL = {
-    "video": "MTV",
-    "cdg": "Áudio + CDG",
-    "audio_lrc": "Áudio + LRC",
-    "audio_midi": "Áudio + guia MIDI",
-    "audio": "Só áudio (precisa de letra)",
-    "midi": "MIDI",
-}
+def kind_label(kind: str) -> str:
+    return t(f"import.kind.{kind}")
+
+
+def status_text(status: str) -> str:
+    """Status codes ("exists", "imported:audio_lrc", "error:<message>"…) → text in the current language."""
+    if not status:
+        return ""
+    code, _, arg = status.partition(":")
+    if code == "imported":
+        return t("import.status.imported", kind=kind_label(arg))
+    if code == "error":
+        return t("import.status.error", detail=arg)
+    return t(f"import.status.{code}")
 
 # "01 - ", "01. ", "1) ", "07 " (zero-padded only, so "50 Cent" survives), "SC8113-01 - "
 _TRACK_NO = re.compile(r"^\s*(?:\d{1,3}\s*[-._)]\s*|0\d\s+|[A-Z]{1,4}\d{2,6}(?:-\d{1,3})?\s*-\s*)")
@@ -167,9 +174,9 @@ def mark_existing(lib: Library, items: list[ImportItem]) -> None:
     for it in items:
         key = it.base.lower()
         if key in existing:
-            it.status, it.selected = "já existe", False
+            it.status, it.selected = "exists", False
         elif key in seen:
-            it.status, it.selected = "repetida na origem", False
+            it.status, it.selected = "duplicate", False
         seen.add(key)
 
 
@@ -192,11 +199,11 @@ def _place(src: Path, dest_dir: Path, base: str) -> Path:
 def import_item(lib: Library, item: ImportItem, *, move: bool = False, find_lyrics: bool = True,
                 make_multiplex: bool = False, normalize: bool = True, cancel: Event | None = None,
                 on_progress=None, search=None) -> str:
-    """Imports one item; returns its final status text. Never overwrites."""
+    """Imports one item; returns its status code (see status_text). Never overwrites."""
     progress = on_progress or (lambda step, frac=None: None)
     base = item.base
     if lib.exists(base):
-        return "já existe"
+        return "exists"
     if cancel is not None and cancel.is_set():
         raise Cancelled()
 
@@ -205,19 +212,19 @@ def import_item(lib: Library, item: ImportItem, *, move: bool = False, find_lyri
         lrc_text = read_lrc(next(c for c in item.companions if c.suffix.lower() == ".lrc"))
     elif item.kind == "audio":
         if not find_lyrics:
-            return "sem letra (não importada)"
-        progress("buscando letra", None)
+            return "no_lyrics"
+        progress("step.find_lyrics", None)
         cand = find_synced(item.artist, item.title, duration(item.main), search=search)
         if cand is None:
-            return "sem letra (não importada)"
+            return "no_lyrics"
         lrc_text = cand.synced
 
     if make_multiplex and lrc_text:
         pipeline.track_from_local(lib, item.main, item.artist, item.title, lrc_text, progress, cancel)
-        result = "importada (Multiplex + LRC)"
+        result = "imported:multiplex"
     else:
         with pipeline._workdir(lib) as tmp:
-            progress("copiando", None)
+            progress("step.copy", None)
             files = [_place(item.main, tmp, base)]
             files += [_place(c, tmp, base) for c in item.companions]
             if lrc_text and not any(f.suffix == ".lrc" for f in files):
@@ -228,10 +235,10 @@ def import_item(lib: Library, item: ImportItem, *, move: bool = False, find_lyri
             if media.suffix.lower() == ".mp3":
                 write_tags(media, item.artist, item.title)
             if normalize and media.suffix.lower() in AUDIO_EXTS | VIDEO_EXTS:
-                progress("ajustando volume", None)
+                progress("step.normalize", None)
                 loudness.normalize_file(media)
             pipeline._finish(lib, files, base)
-        result = f"importada ({KIND_LABEL['audio_lrc'] if lrc_text else KIND_LABEL[item.kind]})"
+        result = f"imported:{'audio_lrc' if lrc_text else item.kind}"
 
     if move:
         for src in [item.main, *item.companions]:

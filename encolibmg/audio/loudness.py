@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from mutagen.id3 import ID3, TXXX, ID3NoHeaderError
+from encolibmg.i18n import t
 
 TARGET = -16.0
 MAX_TP = -1.0
@@ -53,7 +54,7 @@ def measure(path: Path) -> Loudness:
     i = re.findall(r"^\s*I:\s*(-?[\d.]+|-inf) LUFS", proc.stderr, re.M)
     tp = re.findall(r"^\s*Peak:\s*(-?[\d.]+|-inf) dBFS", proc.stderr, re.M)
     if proc.returncode != 0 or not i or not tp:
-        raise RuntimeError(f"Não consegui medir o volume de {Path(path).name}:\n{proc.stderr[-800:]}")
+        raise RuntimeError(t("err.measure_loudness", name=Path(path).name, detail=proc.stderr[-800:]))
     return Loudness(float(i[-1]), float(tp[-1]))
 
 
@@ -119,7 +120,7 @@ def normalize_file(path: Path) -> bool:
     proc = _run(cmd + [str(tmp)])
     if proc.returncode != 0:
         tmp.unlink(missing_ok=True)
-        raise RuntimeError(f"ffmpeg falhou ao normalizar {path.name}:\n{proc.stderr[-800:]}")
+        raise RuntimeError(t("err.ffmpeg_normalize", name=path.name, detail=proc.stderr[-800:]))
     os.replace(tmp, path)
     if ext == ".mp3":
         mark_mp3(path)

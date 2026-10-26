@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EncoLibMG — Identidade</title>
+<title>EncoLibMG — Identity</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -81,8 +81,8 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 40px
 <header>
   <canvas id="hdrmark" width="16" height="16" style="width:20px;height:20px;image-rendering:pixelated"></canvas>
   <span class="name">EncoLibMG</span>
-  <nav><a href="#marca">Marca</a><a href="#cores">Cores</a><a href="#tipo">Tipografia</a><a href="#pixels">Pixels</a><a href="#voz">Voz</a></nav>
-  <span class="pill">identidade · v0</span>
+  <nav><a href="#marca">Mark</a><a href="#cores">Colors</a><a href="#tipo">Type</a><a href="#pixels">Pixels</a><a href="#voz">Voice</a></nav>
+  <span class="pill">identity · v0</span>
 </header>
 
 <div class="hero">
@@ -90,77 +90,77 @@ footer { text-align: center; color: var(--muted); font-size: 12px; padding: 40px
   <div class="inner">
     <canvas class="word" id="word"></canvas>
     <div class="tag rise" style="animation-delay:1.1s"><span id="typed"></span><span class="caret"></span></div>
-    <div class="sub rise" style="animation-delay:1.3s">Gerenciador de bibliotecas para o Encore Karaoke · Multiplex, guia MIDI, letra palavra a palavra.</div>
+    <div class="sub rise" style="animation-delay:1.3s">Library manager for Encore Karaoke · Multiplex, MIDI guide, word-by-word lyrics.</div>
   </div>
 </div>
 
 <section id="marca">
-  <h2>Escolha a marca</h2>
-  <p class="lead">Três conceitos desenhados numa grade de 16×16 pixels, a mesma lógica do logo do Omarchy. Passe o mouse para ver a montagem; abaixo, cada um em tamanho de ícone (64, 32, 16 px) e com o nome.</p>
+  <h2>The mark</h2>
+  <p class="lead">Three concepts drawn on a 16×16 pixel grid, the same logic as the Omarchy logo. Hover to watch them assemble; below, each one at icon sizes (64, 32, 16 px) and next to the name.</p>
   <div class="marks" id="marks"></div>
 </section>
 
 <section id="cores">
   <div class="grid2">
     <div>
-      <h2>Cores</h2>
-      <p class="lead">Tema único "Solitude": grafite monocromático. Cor só onde ela informa: os quatro tons de estado aparecem em selos e ícones, nunca em áreas grandes.</p>
+      <h2>Colors</h2>
+      <p class="lead">One theme, "Solitude": monochrome graphite. Color only where it informs: the four status tones appear in badges and icons, never in large areas.</p>
       <div class="swatches" id="swatches"></div>
     </div>
     <div>
-      <h2>Escala do campo</h2>
-      <p class="lead">Os pixels animados usam só esta rampa, do apagado à crista.</p>
+      <h2>Field ramp</h2>
+      <p class="lead">The animated pixels use only this ramp, from dim to crest.</p>
       <canvas id="ramp" width="440" height="80" style="width:100%;max-width:440px"></canvas>
       <div class="badges">
         <span class="badge" style="color:var(--text-2)">[MP]</span><span class="badge" style="color:var(--text-2)">[LRC]</span>
-        <span class="badge" style="color:var(--info)">[GUIA]</span><span class="badge" style="color:var(--text-2)">[CLIPE]</span>
-        <span class="badge" style="color:var(--ok)">✓ sincronizada</span><span class="badge" style="color:var(--warn)">volume</span>
-        <span class="badge" style="color:var(--bad)">⚠ invisível</span>
+        <span class="badge" style="color:var(--info)">[GUIDE]</span><span class="badge" style="color:var(--text-2)">[CLIP]</span>
+        <span class="badge" style="color:var(--ok)">✓ synced</span><span class="badge" style="color:var(--warn)">volume</span>
+        <span class="badge" style="color:var(--bad)">⚠ hidden</span>
       </div>
     </div>
   </div>
 </section>
 
 <section id="tipo" class="type">
-  <h2>Tipografia</h2>
-  <p class="lead">JetBrains Mono em tudo (licença OFL, embutida no app). Peso 500 nos títulos com espaçamento negativo; 400 no texto.</p>
-  <div class="big">Sua biblioteca de karaokê, afinada.</div>
-  <div class="row"><span>Título 26/500</span><span style="font-size:26px;font-weight:500;letter-spacing:-.75px">Biblioteca</span></div>
-  <div class="row"><span>Texto 15/400</span><span>38 faixas · 12 com guia · 2 problemas</span></div>
-  <div class="row"><span>Detalhe 12</span><span style="font-size:12px;color:var(--text-2)">Pressione <kbd>/</kbd> para buscar, <kbd>?</kbd> para ver os atalhos</span></div>
-  <div class="row"><span>Botões</span><span><button class="btn">⬇ Baixar completa</button> <button class="btn ghost">▶ Prévia do guia</button></span></div>
+  <h2>Typography</h2>
+  <p class="lead">JetBrains Mono everywhere (OFL license, bundled with the app). Weight 500 with tight tracking for titles; 400 for text.</p>
+  <div class="big">Your karaoke library, in tune.</div>
+  <div class="row"><span>Title 26/500</span><span style="font-size:26px;font-weight:500;letter-spacing:-.75px">Library</span></div>
+  <div class="row"><span>Text 15/400</span><span>38 tracks · 12 with guide · 2 problems</span></div>
+  <div class="row"><span>Detail 12</span><span style="font-size:12px;color:var(--text-2)">Press <kbd>/</kbd> to search, <kbd>?</kbd> to see the shortcuts</span></div>
+  <div class="row"><span>Buttons</span><span><button class="btn">⬇ Download full</button> <button class="btn ghost">▶ Guide preview</button></span></div>
 </section>
 
 <section id="pixels">
-  <h2>Regras de pixel</h2>
-  <p class="lead">Tudo que é "pixel" segue a mesma grade, para o app inteiro parecer uma coisa só.</p>
+  <h2>Pixel rules</h2>
+  <p class="lead">Everything "pixel" follows the same grid, so the whole app feels like one thing.</p>
   <div class="rules">
-    <div class="rule"><canvas id="r1" width="120" height="60"></canvas><h4>Célula 10px, intervalo 1px</h4><p>Quadrados, nunca círculos. Cantos retos em toda a interface, bordas de 1px.</p></div>
-    <div class="rule"><canvas id="r2" width="120" height="60"></canvas><h4>Colchetes de canto</h4><p>Os cantos em "L" enquadram o que importa: marca, item selecionado, área de soltar arquivos.</p></div>
-    <div class="rule"><canvas id="r3" width="120" height="60"></canvas><h4>Preenchimento de karaokê</h4><p>Progresso é sempre um "preenchimento de letra": da esquerda para a direita, aceso sobre apagado.</p></div>
+    <div class="rule"><canvas id="r1" width="120" height="60"></canvas><h4>10px cell, 1px gap</h4><p>Squares, never circles. Square corners across the interface, 1px borders.</p></div>
+    <div class="rule"><canvas id="r2" width="120" height="60"></canvas><h4>Corner brackets</h4><p>"L" corners frame what matters: the mark, the selected item, drop zones.</p></div>
+    <div class="rule"><canvas id="r3" width="120" height="60"></canvas><h4>Karaoke fill</h4><p>Progress is always a "lyric fill": left to right, lit over dim.</p></div>
   </div>
 </section>
 
 <section id="voz" class="voice">
-  <h2>Voz</h2>
-  <p class="lead">Curta, direta, em português, como um terminal simpático.</p>
+  <h2>Voice</h2>
+  <p class="lead">Short and direct, like a friendly terminal. In English and Brazilian Portuguese.</p>
   <ul>
     <li><b>"Separando a voz… 62%"</b> em vez de "Processando, aguarde"</li>
-    <li><b>"Pronto: Someone Like You entrou na biblioteca."</b> diz o resultado, não o processo</li>
-    <li><b>"Não achei letra sincronizada. Quer um vídeo de karaokê?"</b> todo erro sugere um caminho</li>
-    <li><b>Atalhos sempre visíveis</b> em <kbd>kbd</kbd> ao lado das ações</li>
+    <li><b>"Done: Someone Like You is in the library."</b> says the result, not the process</li>
+    <li><b>"No synced lyrics found. Want a karaoke video instead?"</b> every error suggests a way forward</li>
+    <li><b>Shortcuts always visible</b> as <kbd>kbd</kbd> next to the actions</li>
   </ul>
 </section>
 
-<footer>EncoLibMG · identidade visual · inspirada na linguagem de omarchy.org, desenho original</footer>
+<footer>EncoLibMG · visual identity · inspired by the language of omarchy.org, original design</footer>
 
 <script>
 const DATA = __DATA__;
 const P = DATA.palette;
 const CONCEPTS = {
-  A: ["Equalizador E", "Monograma: os braços do E são barras de nível, e o do meio ainda está \"soando\". Simples, forte em 16px, vira ícone de app."],
-  B: ["Letra cantada", "Uma linha de karaokê no meio do preenchimento e a próxima esperando, entre colchetes. É exatamente o que o app produz."],
-  C: ["Microfone", "O símbolo universal de karaokê, sólido, com as grades em tom médio e os mesmos colchetes de canto."],
+  A: ["Equalizer E", "Monogram: the arms of the E are level bars, and the middle one is still \"ringing\". Simple, strong at 16px, works as an app icon."],
+  B: ["Sung line", "A karaoke line halfway through filling up and the next one waiting, between brackets. Exactly what the app produces."],
+  C: ["Microphone", "The universal karaoke symbol, solid, with the grille in a mid tone and the same corner brackets."],
 };
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ease = t => 1 - Math.pow(1 - t, 3);
@@ -283,7 +283,7 @@ function typer(el, lines) {
 // ---- build page
 field(document.getElementById("field"));
 const word = assembler(document.getElementById("word"), DATA.wordmark, Math.min(9, Math.floor(innerWidth * .8 / 108)), 1, { spread: .9, stagger: 700, dur: 900 });
-setTimeout(() => typer(document.getElementById("typed"), ["Sua biblioteca de karaokê, afinada.", "Queen - Bohemian Rhapsody", "Multiplex + LRC + guia", "Adele - Someone Like You"]), 1100);
+setTimeout(() => typer(document.getElementById("typed"), ["Your karaoke library, in tune.", "Sua biblioteca de karaokê, afinada.", "Multiplex + LRC + MIDI guide", "Queen - Bohemian Rhapsody"]), 1100);
 staticDraw(document.getElementById("hdrmark"), DATA.marks[DATA.chosen], 1);
 
 const marksEl = document.getElementById("marks");
@@ -291,7 +291,7 @@ for (const [k, grid] of Object.entries(DATA.marks)) {
   const card = document.createElement("div");
   card.className = "card rise"; card.style.animationDelay = (Object.keys(DATA.marks).indexOf(k) * 80) + "ms";
   card.innerHTML = `<div class="stage"><canvas></canvas></div>
-    <h3><kbd>${k}</kbd>${CONCEPTS[k][0]}${k === DATA.chosen ? " <span class=\"badge\" style=\"color:var(--ok)\">✓ escolhida</span>" : ""}</h3><p>${CONCEPTS[k][1]}</p>
+    <h3><kbd>${k}</kbd>${CONCEPTS[k][0]}${k === DATA.chosen ? " <span class=\"badge\" style=\"color:var(--ok)\">✓ chosen</span>" : ""}</h3><p>${CONCEPTS[k][1]}</p>
     <div class="sizes"><figure><canvas></canvas>64</figure><figure><canvas></canvas>32</figure><figure><canvas></canvas>16</figure></div>
     <div class="lockup"><canvas></canvas><span class="t">EncoLib<b>MG</b></span></div>
     <div class="lockup light"><canvas></canvas><span class="t">EncoLib<b>MG</b></span></div>`;
@@ -304,8 +304,8 @@ for (const [k, grid] of Object.entries(DATA.marks)) {
   staticDraw(cs[5], grid, 2, 0, "#111", "#9a9a9a"); cs[5].style.width = cs[5].style.height = "28px";
 }
 
-const SW = [["bg-deep", "fundo profundo"], ["bg", "fundo"], ["surface", "superfície"], ["border-strong", "borda forte"],
-            ["text", "texto"], ["text-2", "texto 2"], ["muted", "apagado"], ["brand", "marca"]];
+const SW = [["bg-deep", "deep background"], ["bg", "background"], ["surface", "surface"], ["border-strong", "strong border"],
+            ["text", "text"], ["text-2", "text 2"], ["muted", "muted"], ["brand", "brand"]];
 const swEl = document.getElementById("swatches");
 for (const [k, label] of SW) swEl.insertAdjacentHTML("beforeend", `<div class="sw"><div style="background:${P[k]}"></div><span><b>${label}</b>${P[k]}</span></div>`);
 for (const [k, v] of [["ok", "#8fae8b"], ["warn", "#c9b27a"], ["bad", "#c98b8b"], ["info", "#8ba7c9"]])

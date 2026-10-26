@@ -1,123 +1,129 @@
 <p align="center"><img src="encolibmg/webui/static/brand/wordmark.svg" alt="EncoLibMG" width="480"></p>
 
-<p align="center"><b>Sua biblioteca de karaokê, afinada.</b><br>
-Monta e organiza uma <code>EncoreLibrary</code> para o
-<a href="https://github.com/Encore-Karaoke-Labs/Encore-Karaoke">Encore Karaoke</a>, aproveitando tudo que o player oferece.</p>
+<p align="center"><b>Your karaoke library, in tune.</b><br>
+Builds and organizes an <code>EncoreLibrary</code> for
+<a href="https://github.com/Encore-Karaoke-Labs/Encore-Karaoke">Encore Karaoke</a>, using everything the player can do.</p>
 
-![Tela inicial do EncoLibMG](docs/screens/inicio.png)
+<p align="center"><b>English</b> · <a href="README.pt-BR.md">Português (Brasil)</a></p>
 
-## O que cada música ganha
+![EncoLibMG home screen](docs/screens/en/home.png)
 
-| Arquivo | O que faz no Encore |
+## What every song gets
+
+| File | What it does in Encore |
 |---|---|
-| `Artista - Música.multiplexed.mp3` | Instrumental no canal esquerdo e voz no direito. ◀/▶ liga e desliga a voz-guia. |
-| `Artista - Música.lrc` | Letra sincronizada, no formato exato que o Encore lê. Romanização automática de japonês e coreano. |
-| `Artista - Música.guide.mid` | **Guia MIDI**: notas da melodia (detectadas com o CREPE) e letra palavra a palavra. O guia de afinação, a pontuação e o realce da letra ficam precisos. No Encore, `M` → Guide toca a melodia. |
-| `Artista - Música.mp4` (opcional) | Clipe oficial tocando mudo atrás da letra, sem perder a voz-guia. |
+| `Artist - Song.multiplexed.mp3` | Instrumental on the left channel, vocals on the right. ◀/▶ turns the guide vocal on and off. |
+| `Artist - Song.lrc` | Synced lyrics, in the exact format Encore reads. Japanese and Korean are romanized automatically. |
+| `Artist - Song.guide.mid` | **MIDI guide**: the melody notes (detected with CREPE) and word-by-word lyrics. Pitch guide, scoring and lyric highlighting become accurate. In Encore, `M` → Guide plays the melody. |
+| `Artist - Song.mp4` (optional) | The official music video playing muted behind the lyrics, without losing the guide vocal. |
 
-Sem letra sincronizada disponível, o EncoLibMG baixa um **vídeo de karaokê (MTV)**. Todas as faixas saem
-com volume uniforme (−16 LUFS), sem comprimir a dinâmica.
+When there are no synced lyrics, EncoLibMG downloads a **karaoke video (MTV)** instead. Every track ends up
+at the same loudness (−16 LUFS), without squashing the dynamics.
 
-## Instalar
-1. Precisa de **Python 3.12** e **ffmpeg** (`winget install Gyan.FFmpeg`). O Windows 10/11 já traz o
-   WebView2, que desenha a janela.
-2. Dê dois cliques em `instalar.bat`. São ~3 GB por causa do PyTorch, do Demucs e dos modelos.
-   Com placa NVIDIA, tudo roda na GPU.
+## Install
+1. You need **Python 3.12** and **ffmpeg** (`winget install Gyan.FFmpeg`). Windows 10/11 already ships
+   WebView2, which draws the window.
+2. Double-click `instalar.bat`. It's ~3 GB because of PyTorch, Demucs and the models.
+   With an NVIDIA card, everything runs on the GPU.
 
-## Usar
-1. Dê dois cliques em `Abrir EncoLibMG.bat`.
-2. No topo, clique no nome da biblioteca → **Abrir ou criar** (ou `Ctrl O`). Se a pasta ainda não for uma
-   biblioteca, o app cria a `EncoreLibrary` com o `manifest.json`.
-3. Na tela **Início**, digite `Artista - Música` e aperte `Enter`.
-4. Escolha a versão da letra com ✓ e clique em **Baixar completa**. O app procura o áudio com a mesma duração
-   da letra, separa a voz, monta o Multiplex e gera o guia MIDI.
-5. No Encore, aponte o Setup (F2) para a pasta da biblioteca. O Encore também acha sozinho qualquer pasta
-   chamada `EncoreLibrary` nos seus drives.
+## Use
+1. Double-click `Abrir EncoLibMG.bat`.
+2. At the top, click the library name → **Open or create** (or `Ctrl O`). If the folder isn't a library yet,
+   the app creates the `EncoreLibrary` folder with its `manifest.json`.
+3. On **Home**, type `Artist - Song` and press `Enter`.
+4. Pick a lyrics version marked ✓ and click **Download full**. The app looks for audio with the same length as
+   the lyrics, splits the vocals, builds the Multiplex and generates the MIDI guide.
+5. In Encore, point Setup (F2) at the library folder. Encore also finds any folder named `EncoreLibrary`
+   on your drives by itself.
 
-## Telas
+The app follows the Windows language (English or Brazilian Portuguese). Switch any time with the
+**EN/PT** button at the top; no restart needed.
 
-**Início**: o logo em pixels, a busca e os números da biblioteca.
+## Screens
 
-**Adicionar**: os resultados de letra, com as 5 etapas do processo acendendo enquanto a música é preparada.
-Para MTV e clipes, há um seletor com miniaturas do YouTube.
+**Home**: the pixel logo, the search box and your library's numbers.
 
-**Biblioteca**: filtros (Multiplex, com guia, sem guia, MTV, MIDI, invisíveis), seleção múltipla e um painel
-por faixa. Pelo painel você ouve com instrumental/voz/ambos, abre a sincronia e a prévia do guia,
-gera o guia, edita, adiciona clipe, converte para Multiplex ou remove.
+**Add**: lyrics results, with the 5 steps lighting up while the song is prepared.
+For MTV videos and music videos there's a picker with YouTube thumbnails.
 
-![Biblioteca](docs/screens/biblioteca.png)
+**Library**: filters (Multiplex, with guide, no guide, MTV, MIDI, hidden), multi-select and a panel per track.
+From the panel you can listen to instrumental/vocals/both, open Sync and the guide preview, build the guide,
+edit, add a music video, convert to Multiplex or remove.
 
-**Sincronia**: a onda da voz em pixels, com cada linha da letra marcada. Arraste a onda para ir e voltar.
-- **Deslocar tudo:** ±1 s ou ±0,1 s.
-- **Âncoras:** com a música tocando, aperte `Espaço` quando a linha selecionada começar a ser cantada.
-  Com duas ou mais, a letra é esticada entre elas.
-- **Sugerir:** acha sozinho onde a voz começa.
-- Sempre fica backup, com **Desfazer**. Ao salvar, o app oferece regerar o guia.
+![Library](docs/screens/en/library.png)
 
-![Sincronia](docs/screens/sincronia.png)
+**Sync**: the vocal waveform in pixels, with every lyric line marked on it. Drag the waveform to scrub.
+- **Shift everything:** ±1 s or ±0.1 s.
+- **Anchors:** while the song plays, press `Space` when the selected line starts being sung.
+  With two or more, the lyrics are stretched between them.
+- **Suggest:** finds where the vocals start on its own.
+- There's always a backup, with **Undo**. When you save, the app offers to rebuild the guide.
 
-**Prévia do guia**: o rolo de piano com as notas que o Encore vai usar e a letra acendendo palavra a palavra,
-como no Encore.
+**Guide preview**: a piano roll with the notes Encore will use and the lyrics lighting up word by word,
+just like in Encore.
 
-![Prévia do guia](docs/screens/guia.png)
+**Check**: finds what Encore would ignore or show wrong and fixes it in one click. It covers:
+- audio without lyrics;
+- tracks without a MIDI guide;
+- non-standard lyrics;
+- unsupported formats (FLAC, WMA, MOV…);
+- files in subfolders;
+- an incomplete manifest;
+- missing tags;
+- volume (optional).
 
-**Verificar**: acha o que o Encore ignoraria ou mostraria errado e corrige com um clique. Cobre:
-- áudio sem letra;
-- faixa sem guia MIDI;
-- letra fora do padrão;
-- formatos não aceitos (FLAC, WMA, MOV…);
-- arquivos em subpasta;
-- manifest incompleto;
-- tags faltando;
-- volume (opcional).
+![Check](docs/screens/en/check.png)
 
-**Importar**: traz o que você já tem: CDs/FLAC, coleções CDG, `.zip` e karaokês `.kar`/`.mid` (título lido
-de dentro do arquivo, inclusive em japonês). Antes de importar, você confere os nomes numa prévia editável.
-O app pode gerar o Multiplex **a partir do seu arquivo**, com a qualidade da sua fonte.
+**Import**: brings in what you already have: CDs/FLAC, CDG collections, `.zip` files and `.kar`/`.mid`
+karaoke (the title is read from inside the file, Japanese included). Before importing, you review the names in
+an editable preview. The app can build the Multiplex **from your own file**, at your source's quality.
 
-**Visual e som**:
-- **Vídeos de fundo** por categoria, do PC ou do YouTube. Do YouTube, só um trecho de até 5 minutos.
-- **Imagens de espera** da tela entre músicas.
-- **Vídeo de abertura** da biblioteca.
-- **Narração da nota**: um áudio por faixa de pontuação.
-- **SoundFont**: inclui o download do GeneralUser GS, gratuito.
+**Look & sound**:
+- **Background videos** by category, from your PC or YouTube. From YouTube, only a clip of up to 5 minutes.
+- **Idle images** for the screen between songs.
+- The library's **intro video**.
+- **Score narration**: one audio clip per score range.
+- **SoundFont**: includes a download of the free GeneralUser GS.
 
-**Configurar** (⚙ no topo): nome, descrição e opções da biblioteca no Encore.
+**Settings** (⚙ at the top): the library's name, description and Encore options.
 
-### Atalhos
-| Tecla | Ação |
+### Shortcuts
+| Key | Action |
 |---|---|
-| `/` | Buscar uma música |
-| `1`–`6` | Início, Adicionar, Biblioteca, Verificar, Importar, Visual |
-| `Espaço` | Tocar/pausar · na Sincronia: marcar âncora |
-| `←` `→` | Voltar/avançar 5 s |
-| `Esc` | Fechar janela, painel ou voltar |
-| `Ctrl O` | Abrir ou criar biblioteca |
-| `?` | Todos os atalhos |
+| `/` | Search for a song |
+| `1`–`6` | Home, Add, Library, Check, Import, Look & sound |
+| `Space` | Play/pause · in Sync: set an anchor |
+| `←` `→` | Back/forward 5 s |
+| `Esc` | Close a dialog or panel, or go back |
+| `Ctrl O` | Open or create a library |
+| `?` | All shortcuts |
 
-Nada é apagado de verdade: o que sai vai para a Lixeira, e toda letra alterada ganha backup.
+Nothing is really deleted: whatever is removed goes to the Recycle Bin, and every edited lyric gets a backup.
 
-## Identidade
-Marca **"Letra cantada"**: uma linha de karaokê no meio do preenchimento, entre colchetes de canto. A estética
-é inspirada no [Omarchy](https://omarchy.org/), com desenho original. Tudo (marca, wordmark, ícone do Windows)
-é gerado a partir de grades de pixels por [scripts/brand.py](scripts/brand.py). A página da identidade está em
+## Identity
+The **"Sung line"** mark: a karaoke line halfway through filling up, between corner brackets. The look is
+inspired by [Omarchy](https://omarchy.org/), with an original design. Everything (mark, wordmark, Windows icon)
+is generated from pixel grids by [scripts/brand.py](scripts/brand.py). The identity page is
 [docs/brand/index.html](docs/brand/index.html).
 
-## Desenvolvimento
+## Development
 ```
-.venv\Scripts\python -m pytest            # testes rápidos (inclui os de JS, se o Node estiver instalado)
-.venv\Scripts\python -m pytest -m slow    # inclui Demucs e CREPE de verdade
-.venv\Scripts\python -m encolibmg --debug # abre a janela com as ferramentas de desenvolvedor
-.venv\Scripts\python -m encolibmg --tk    # interface antiga (Tk), de reserva
+.venv\Scripts\python -m pytest            # fast tests (includes the JS ones when Node is installed)
+.venv\Scripts\python -m pytest -m slow    # also runs the real Demucs and CREPE
+.venv\Scripts\python -m encolibmg --debug # opens the window with the developer tools
 ```
-- **Estrutura:** motor em Python (`encolibmg/`); interface em `encolibmg/webui/` (pywebview + lit-html, sem
-  etapa de build); efeitos de pixel em `encolibmg/webui/static/js/fx/`.
-- **Prints da janela real:** `python scripts/snap_app.py <pasta> home library sync/<faixa> …`.
-- **Documentação:** [roadmap](docs/roadmap.md) · [especificação da interface](docs/specs/2026-10-26-nova-ui-design.md).
+- **Layout:** Python engine in `encolibmg/`; interface in `encolibmg/webui/` (pywebview + lit-html, no build
+  step); pixel effects in `encolibmg/webui/static/js/fx/`.
+- **Translations:** every text lives in `scripts/catalog_engine.py` (engine) and `scripts/catalog_ui.py`
+  (interface) as `(key, pt-BR, en)`. Run `python scripts/i18n_build.py` to regenerate `encolibmg/locales/`.
+  The tests fail if a key is missing, unused, or a language lacks a `{placeholder}`.
+- **Screenshots of the real window:** `ENCOLIB_TEST_LIB=<library> ENCOLIB_LANG=en python scripts/snap_app.py <folder> home library …`.
+- **Docs:** [roadmap](docs/roadmap.md) · [interface spec](docs/specs/2026-10-26-nova-ui-design.md).
 - **Log:** `%APPDATA%\EncoLibMG\log.txt`.
-## Licença
-EncoLibMG é software livre sob a [GPL-3.0](LICENSE). As licenças dos componentes de terceiros estão em
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Atenção: o modelo de alinhamento MMS (Meta), baixado na
-primeira geração de guia, é **CC BY-NC 4.0**, só para uso não comercial.
 
-Uso pessoal. O conteúdo que você baixar é de sua responsabilidade.
+## License
+EncoLibMG is free software under the [GPL-3.0](LICENSE). Third-party licenses are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Note: the MMS alignment model (Meta), downloaded the first
+time a guide is built, is **CC BY-NC 4.0**, for non-commercial use only.
+
+For personal use. You are responsible for the content you download.

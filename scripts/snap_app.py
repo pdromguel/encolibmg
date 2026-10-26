@@ -3,7 +3,7 @@
     python scripts/snap_app.py OUT_DIR route [route ...]
     route = "home" | "library" | "sync/Adele - Someone Like You" | "js:<code to run>" | "wait:<seconds>"
 
-Uses a temporary %APPDATA% so the real config is never touched.
+Uses a temporary %APPDATA% so the real config is never touched. ENCOLIB_LANG=en / pt-BR picks the language.
 """
 
 import json
@@ -15,13 +15,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 if "ENCOLIB_TEST_LIB" not in os.environ:
-    sys.exit("Defina ENCOLIB_TEST_LIB com o caminho de uma EncoreLibrary de teste.")
+    sys.exit("Set ENCOLIB_TEST_LIB to the path of a test EncoreLibrary.")
 TEST_LIB = Path(os.environ["ENCOLIB_TEST_LIB"])
 
 appdata = Path(tempfile.mkdtemp(prefix="encolib-appdata-"))
 os.environ["APPDATA"] = str(appdata)
 (appdata / "EncoLibMG").mkdir()
-(appdata / "EncoLibMG" / "config.json").write_text(json.dumps({"library": str(TEST_LIB)}), encoding="utf-8")
+(appdata / "EncoLibMG" / "config.json").write_text(json.dumps({"library": str(TEST_LIB), "language": os.environ.get("ENCOLIB_LANG", "auto")}), encoding="utf-8")
 sys.path.insert(0, str(ROOT))
 
 from encolibmg.webui.app import run  # noqa: E402

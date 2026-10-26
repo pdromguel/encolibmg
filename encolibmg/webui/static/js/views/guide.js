@@ -1,4 +1,4 @@
-// Prévia do guia: pixel piano roll of the MIDI guide + karaoke lyrics filling word by word (like Encore).
+// Guide preview: pixel piano roll of the MIDI guide + karaoke lyrics filling word by word (like Encore).
 import { icon } from "../fx/icons.js";
 import { html } from "../../vendor/lit-html.js";
 import { call, runJob } from "../api.js";
@@ -8,6 +8,8 @@ import { colors } from "../fx/elements.js";
 import { player } from "../player.js";
 import { setView, view } from "../store.js";
 import { toast } from "../ui/toast.js";
+// `t` is a time in this file, so the translator is imported as `tr`
+import { t as tr, tt } from "../i18n.js";
 import { noLibrary } from "./common.js";
 
 const SPAN = 8, AHEAD = .25, NAMES = "C C# D D# E F F# G G# A A# B".split(" ");
@@ -131,7 +133,7 @@ async function regenerate(base) {
     setView("guide", { data: null, base: null });
     await refresh();
     load(base);
-    toast("Guia regerado.", { kind: "ok" });
+    toast(tr("ui.guide.regenerated"), { kind: "ok" });
   } catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
 }
 
@@ -149,31 +151,30 @@ export const guide = {
     if (!st.app?.library) return html`<div class="page">${noLibrary()}</div>`;
     const s = v(), d = s.data;
     if (!d) return html`<div class="page"><div class="empty">${s.loading
-      ? html`<pixel-mark singing style="width:56px;height:56px"></pixel-mark><p>Lendo o guia MIDI…</p>`
-      : html`<p>Escolha uma faixa com guia na <a class="link" href="#/library">Biblioteca</a>.</p>`}</div></div>`;
+      ? html`<pixel-mark singing style="width:56px;height:56px"></pixel-mark><p>${tr("ui.guide.loading")}</p>`
+      : html`<p>${tt("ui.guide.pick", { link: html`<a class="link" href="#/library">${tr("ui.nav.library")}</a>` })}</p>`}</div></div>`;
     const t = st.player?.base === s.base ? st.player.time : 0;
     return html`<div class="page guidep">
       <div class="page-head rise">
-        <a class="btn quiet sm" href="#/library">${icon("back")} Biblioteca</a>
-        <div class="grow"><h2 class="ellipsis">Prévia do guia <span class="muted">·</span> ${d.title}</h2>
-          <p class="sub">${d.artist} · ${d.notes.length} notas · ${d.lyrics.length} palavras</p></div>
-        <button class="btn ghost" ?disabled=${!!st.job} @click=${() => regenerate(s.base)}>${icon("guide")} Regerar guia</button>
-        <a class="btn ghost" href=${"#/sync/" + encodeURIComponent(s.base)}>${icon("clock")} Sincronia</a>
+        <a class="btn quiet sm" href="#/library">${icon("back")} ${tr("ui.nav.library")}</a>
+        <div class="grow"><h2 class="ellipsis">${tr("ui.add.guide_preview")} <span class="muted">·</span> ${d.title}</h2>
+          <p class="sub">${d.artist} · ${tr("ui.guide.counts", { notes: d.notes.length, words: d.lyrics.length })}</p></div>
+        <button class="btn ghost" ?disabled=${!!st.job} @click=${() => regenerate(s.base)}>${icon("guide")} ${tr("ui.lib.rebuild_guide")}</button>
+        <a class="btn ghost" href=${"#/sync/" + encodeURIComponent(s.base)}>${icon("clock")} ${tr("ui.lib.sync")}</a>
       </div>
       <div class="stage rise" style="--i:1">
         <guide-roll .data=${d}></guide-roll>
         <guide-lyrics .lines=${d.lines}></guide-lyrics>
       </div>
       <div class="sctl rise" style="--i:2">
-        <button class="btn icon" @click=${() => player.toggle()} aria-label="Tocar">${icon(st.player?.playing ? "pause" : "play")}</button>
+        <button class="btn icon" @click=${() => player.toggle()} aria-label=${tr("ui.player.play")}>${icon(st.player?.playing ? "pause" : "play")}</button>
         <span class="mono-num time">${fmtTime(t)} <span class="muted">/ ${fmtTime(d.duration)}</span></span>
         <input type="range" class="scrub" min="0" max=${d.duration || 1} step="0.1" .value=${String(t)}
                @input=${e => player.seek(+e.target.value)}>
-        ${d.multiplexed ? html`<div class="seg">${[["both", "Ambos"], ["left", "Instr."], ["right", "Voz"]].map(([k, l]) =>
-          html`<button aria-pressed=${(st.player?.channel || "both") === k} @click=${() => player.setChannel(k)}>${l}</button>`)}</div>` : ""}
+        ${d.multiplexed ? html`<div class="seg">${[["both", "ui.player.both"], ["left", "ui.player.instr"], ["right", "ui.player.voice"]].map(([k, l]) =>
+          html`<button aria-pressed=${(st.player?.channel || "both") === k} @click=${() => player.setChannel(k)}>${tr(l)}</button>`)}</div>` : ""}
       </div>
-      <p class="muted small">As barras são as notas que o Encore usa no guia de afinação e na pontuação; a letra acende palavra por palavra, como lá.
-        Ouça só a <b>Voz</b> para conferir se as notas acompanham o canto. No Encore, <kbd>M</kbd> → Guide toca essa melodia.</p>
+      <p class="muted small">${tt("ui.guide.help", { voice: html`<b>${tr("ui.player.voice")}</b>`, key: html`<kbd>M</kbd>` })}</p>
     </div>`;
   },
 };

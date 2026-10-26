@@ -3,13 +3,13 @@
 import json
 from pathlib import Path
 
-# (flag key in manifest["flags"], label shown in the app, Encore's default when the key is absent)
+# (flag key in manifest["flags"], i18n key of its label, Encore's default when the key is absent)
 # EncoreHome.js reads enableMtvCategory/enableDefaultCategories with `?? true`.
 FLAGS = [
-    ("enableMtvCategory", "Mostrar categoria MTV", True),
-    ("enableDefaultCategories", "Mostrar categorias padrão", True),
-    ("flipArtistTitle", "Inverter artista/título na exibição", False),
-    ("skipToFirstNoteOn", "MIDI: pular silêncio inicial", False),
+    ("enableMtvCategory", "flag.enableMtvCategory", True),
+    ("enableDefaultCategories", "flag.enableDefaultCategories", True),
+    ("flipArtistTitle", "flag.flipArtistTitle", False),
+    ("skipToFirstNoteOn", "flag.skipToFirstNoteOn", False),
 ]
 
 

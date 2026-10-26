@@ -1,6 +1,7 @@
 // Full-screen overlay effects: pixel dissolve between screens, pixel confetti, typed placeholder.
 import { shuffledOrder } from "./core.js";
 import { colors, reducedMotion } from "./elements.js";
+import { t } from "../i18n.js";
 
 let seed = 1;
 
@@ -94,7 +95,7 @@ export function typePlaceholder(input, lines) {
     else if (ci <= 0 && dir < 0) { dir = 1; li = (li + 1) % lines.length; wait = 380; }
     timer = setTimeout(tick, wait);
   };
-  const stop = () => { stopped = true; clearTimeout(timer); input.placeholder = "Artista - Música"; };
+  const stop = () => { stopped = true; clearTimeout(timer); input.placeholder = t("ui.add.placeholder"); };
   input.addEventListener("focus", stop, { once: true });
   tick();
   return stop;

@@ -8,28 +8,31 @@ import { schedule, setView, state, view } from "../store.js";
 import { confirmDialog, promptDialog } from "../ui/overlay.js";
 import { toast } from "../ui/toast.js";
 import { pickVideo } from "./add.js";
-import { badges, fmtSize, noLibrary, pageHead, plural } from "./common.js";
+// note: `t` is a track all over this file, so the translator is imported as `tr`
+import { currentLang, t as tr, tt } from "../i18n.js";
+import { badges, fmtSize, noLibrary, pageHead } from "./common.js";
 
 const ROW = 56;
 const FILTERS = [
-  ["all", "Todas", () => true],
-  ["mp", "Multiplex", t => t.multiplexed],
-  ["guide", "Com guia", t => t.has_guide],
-  ["noguide", "Sem guia", t => t.kind === "multiplex_lrc" && !t.has_guide],
-  ["mtv", "MTV", t => t.kind === "mtv"],
-  ["midi", "MIDI", t => t.kind === "midi"],
-  ["issues", "Invisíveis", t => t.kind === "orphan"],
+  ["all", () => true],
+  ["mp", t => t.multiplexed],
+  ["guide", t => t.has_guide],
+  ["noguide", t => t.kind === "multiplex_lrc" && !t.has_guide],
+  ["mtv", t => t.kind === "mtv"],
+  ["midi", t => t.kind === "midi"],
+  ["issues", t => t.kind === "orphan"],
 ];
-const SORTS = [["artist", "Artista"], ["title", "Título"], ["recent", "Recentes"]];
+const SORTS = ["artist", "title", "recent"];
 
 const v = () => view("library", { q: "", filter: "all", sort: "artist", selected: null, checked: [], scroll: 0, vh: 700 });
 
 function visibleTracks(tracks) {
-  const s = v(), q = s.q.trim().toLowerCase(), pred = FILTERS.find(f => f[0] === s.filter)?.[2] || (() => true);
+  const s = v(), q = s.q.trim().toLowerCase(), pred = FILTERS.find(f => f[0] === s.filter)?.[1] || (() => true);
   const out = (tracks || []).filter(t => pred(t) && (!q || t.base.toLowerCase().includes(q)));
+  const lang = currentLang();
   const cmp = {
-    artist: (a, b) => a.artist.localeCompare(b.artist, "pt") || a.title.localeCompare(b.title, "pt"),
-    title: (a, b) => a.title.localeCompare(b.title, "pt"),
+    artist: (a, b) => a.artist.localeCompare(b.artist, lang) || a.title.localeCompare(b.title, lang),
+    title: (a, b) => a.title.localeCompare(b.title, lang),
     recent: (a, b) => b.mtime - a.mtime,
   }[s.sort];
   return out.sort(cmp);
@@ -42,57 +45,57 @@ async function play(t) {
   const url = await tryCall("media", t.base, "audio");
   if (!url) return;
   player.load({ base: t.base, title: `${t.artist} - ${t.title}`, url, multiplexed: t.multiplexed });
-  player.play().catch(() => toast("Não consegui tocar este arquivo.", { kind: "bad" }));
+  player.play().catch(() => toast(tr("ui.lib.cant_play"), { kind: "bad" }));
 }
 
 async function makeGuides(bases) {
-  if (state.job) return toast("Espere o trabalho atual terminar.", { kind: "warn" });
+  if (state.job) return toast(tr("ui.add.wait_job"), { kind: "warn" });
   try {
     const res = await runJob("track_guides", bases);
     await refresh();
     const ok = res.filter(r => r.stats), bad = res.filter(r => r.error);
     if (ok.length === 1 && !bad.length) {
       const st = ok[0].stats;
-      toast(`Guia pronto: ${st.notes} notas, ${st.aligned} linhas alinhadas${st.fallback ? `, ${st.fallback} estimadas` : ""}.`, {
-        kind: "ok", detail: ok[0].base, actions: [{ label: "Prévia do guia", primary: true, run: () => go("guide", ok[0].base) }] });
-    } else toast(`${plural(ok.length, "guia gerado", "guias gerados")}${bad.length ? `, ${bad.length} com erro` : ""}.`,
+      toast(tr("ui.lib.guide_done", st) + (st.fallback ? tr("ui.lib.guide_est", st) : "") + ".", {
+        kind: "ok", detail: ok[0].base, actions: [{ label: tr("ui.add.guide_preview"), primary: true, run: () => go("guide", ok[0].base) }] });
+    } else toast(tr("ui.lib.guides_made", { count: ok.length }) + (bad.length ? tr("ui.lib.with_errors", { count: bad.length }) : "") + ".",
                  { kind: bad.length ? "warn" : "ok", detail: bad.map(b => `${b.base}: ${b.error}`).join("\n") });
   } catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
 }
 
 async function rename(t) {
-  const res = await promptDialog("Editar faixa", [
-    { name: "artist", label: "Artista", value: t.artist }, { name: "title", label: "Título", value: t.title }],
-    { lead: "Renomeia todos os arquivos da faixa. O Encore dá um código novo para ela (o antigo deixa de valer)." });
+  const res = await promptDialog(tr("ui.lib.edit_title"), [
+    { name: "artist", label: tr("ui.lib.artist"), value: t.artist }, { name: "title", label: tr("ui.lib.title"), value: t.title }],
+    { lead: tr("ui.lib.rename_lead") });
   if (!res) return;
   const nt = await tryCall("track_rename", t.base, res.artist, res.title);
-  if (nt) { setView("library", { selected: nt.base }); await refresh(); toast("Faixa renomeada.", { kind: "ok", detail: nt.base }); }
+  if (nt) { setView("library", { selected: nt.base }); await refresh(); toast(tr("ui.lib.renamed"), { kind: "ok", detail: nt.base }); }
 }
 
 async function remove(bases) {
-  const ok = await confirmDialog(`Remover ${plural(bases.length, "faixa", "faixas")}?`,
-    `${bases.slice(0, 6).join(" · ")}${bases.length > 6 ? " …" : ""}. Os arquivos vão para a Lixeira do Windows.`,
-    { ok: "Mandar para a Lixeira", danger: true });
+  const ok = await confirmDialog(tr("ui.lib.remove_q", { count: bases.length }),
+    `${bases.slice(0, 6).join(" · ")}${bases.length > 6 ? " …" : ""}. ${tr("ui.lib.to_trash")}`,
+    { ok: tr("ui.lib.trash_ok"), danger: true });
   if (!ok) return;
   if (bases.includes(state.player?.base)) player.stop();
   const n = await tryCall("track_remove", bases);
   if (n != null) {
     setView("library", { selected: null, checked: [] });
     await refresh();
-    toast(`${plural(n, "faixa foi", "faixas foram")} para a Lixeira.`, { kind: "ok" });
+    toast(tr("ui.lib.removed", { count: n }), { kind: "ok" });
   }
 }
 
 async function addClip(t) {
-  const video = await pickVideo(`Clipe · ${t.base}`, "Vídeo de fundo para a faixa Multiplex. O Encore toca mudo; ✓ = mesma duração do áudio (mais chance de ficar no tempo).",
+  const video = await pickVideo(tr("ui.lib.clip_title", { base: t.base }), tr("ui.lib.clip_lead"),
                                 async () => (await call("find_clip", t.base)).videos);
   if (!video) return;
-  try { await runJob("add_clip", t.base, video.id); await refresh(); toast("Clipe adicionado.", { kind: "ok", detail: t.base }); }
+  try { await runJob("add_clip", t.base, video.id); await refresh(); toast(tr("ui.lib.clip_added"), { kind: "ok", detail: t.base }); }
   catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
 }
 
 async function convert(t) {
-  try { await runJob("track_convert", t.base); await refresh(); toast("Agora é Multiplex (com guia).", { kind: "ok", detail: t.base }); }
+  try { await runJob("track_convert", t.base); await refresh(); toast(tr("ui.lib.converted"), { kind: "ok", detail: t.base }); }
   catch (e) { if (e.kind !== "Cancelled") toast(e.message, { kind: "bad" }); }
 }
 
@@ -112,9 +115,9 @@ function row(t, i, s) {
     <div class="grow tt"><div class="t ellipsis">${t.title}</div><div class="a ellipsis">${t.artist}</div></div>
     ${badges(t.badges)}
     <div class="racts" @click=${e => e.stopPropagation()}>
-      <button class="btn quiet sm icon" data-tip=${playing ? "Pausar" : "Ouvir"} @click=${() => playing ? player.pause() : play(t)}>${icon(playing ? "pause" : "play")}</button>
-      ${t.has_lrc ? html`<button class="btn quiet sm icon" data-tip="Sincronia" @click=${() => go("sync", t.base)}>${icon("clock")}</button>` : ""}
-      ${t.has_guide ? html`<button class="btn quiet sm icon" data-tip="Prévia do guia" @click=${() => go("guide", t.base)}>${icon("note")}</button>` : ""}
+      <button class="btn quiet sm icon" data-tip=${tr(playing ? "ui.player.pause" : "ui.lib.listen")} @click=${() => playing ? player.pause() : play(t)}>${icon(playing ? "pause" : "play")}</button>
+      ${t.has_lrc ? html`<button class="btn quiet sm icon" data-tip=${tr("ui.lib.sync")} @click=${() => go("sync", t.base)}>${icon("clock")}</button>` : ""}
+      ${t.has_guide ? html`<button class="btn quiet sm icon" data-tip=${tr("ui.add.guide_preview")} @click=${() => go("guide", t.base)}>${icon("note")}</button>` : ""}
     </div>
   </div>`;
 }
@@ -140,26 +143,26 @@ function drawer(t) {
       <pixel-identicon name=${t.base}></pixel-identicon>
       <div class="grow"><h3 class="selectable">${t.title}</h3><div class="dim selectable">${t.artist}</div>
         <div style="margin-top:8px">${badges(t.badges)}</div></div>
-      <button class="btn quiet sm icon" aria-label="Fechar painel" @click=${() => setView("library", { selected: null })}>${icon("close")}</button>
+      <button class="btn quiet sm icon" aria-label=${tr("ui.lib.close_panel")} @click=${() => setView("library", { selected: null })}>${icon("close")}</button>
     </div>
     ${t.has_video ? clipPreview(t) : ""}
     <div class="dplay">
-      <button class="btn" @click=${() => isThis && p.playing ? player.pause() : play(t)}>${icon(isThis && p.playing ? "pause" : "play")} ${isThis && p.playing ? "Pausar" : "Ouvir"}</button>
-      <span class="muted small">${t.multiplexed ? "No rodapé: Ambos · Instr. · Voz" : t.label}</span>
+      <button class="btn" @click=${() => isThis && p.playing ? player.pause() : play(t)}>${icon(isThis && p.playing ? "pause" : "play")} ${tr(isThis && p.playing ? "ui.player.pause" : "ui.lib.listen")}</button>
+      <span class="muted small">${t.multiplexed ? tr("ui.lib.channels_hint") : t.label}</span>
     </div>
     <div class="dgrid">
-      ${act(html`${icon("clock")} Sincronia`, () => go("sync", t.base), { disabled: !t.has_lrc })}
-      ${act(html`${icon("note")} Prévia do guia`, () => go("guide", t.base), { disabled: !t.has_guide })}
-      ${act(html`${icon("guide")} ${t.has_guide ? "Regerar guia" : "Gerar guia"}`, () => makeGuides([t.base]), { disabled: t.kind !== "multiplex_lrc" || !!state.job })}
-      ${act(html`${icon("edit")} Editar`, () => rename(t))}
-      ${act(html`${icon("film")} Adicionar clipe`, () => addClip(t), { disabled: !t.multiplexed || t.has_video || !!state.job })}
-      ${act(html`${icon("levels")} Converter p/ Multiplex`, () => convert(t), { disabled: t.kind !== "audio_lrc" || !!state.job })}
+      ${act(html`${icon("clock")} ${tr("ui.lib.sync")}`, () => go("sync", t.base), { disabled: !t.has_lrc })}
+      ${act(html`${icon("note")} ${tr("ui.add.guide_preview")}`, () => go("guide", t.base), { disabled: !t.has_guide })}
+      ${act(html`${icon("guide")} ${tr(t.has_guide ? "ui.lib.rebuild_guide" : "ui.lib.build_guide")}`, () => makeGuides([t.base]), { disabled: t.kind !== "multiplex_lrc" || !!state.job })}
+      ${act(html`${icon("edit")} ${tr("ui.lib.edit")}`, () => rename(t))}
+      ${act(html`${icon("film")} ${tr("ui.lib.add_clip")}`, () => addClip(t), { disabled: !t.multiplexed || t.has_video || !!state.job })}
+      ${act(html`${icon("levels")} ${tr("ui.lib.convert")}`, () => convert(t), { disabled: t.kind !== "audio_lrc" || !!state.job })}
     </div>
-    <h4 class="dsec">Arquivos</h4>
+    <h4 class="dsec">${tr("ui.lib.files")}</h4>
     <ul class="files">${t.files.map(f => html`<li><span class="ellipsis selectable">${f.name}</span><span class="muted">${fmtSize(f.size)}</span></li>`)}</ul>
     <div class="row" style="margin-top:16px">
-      <button class="btn quiet sm" @click=${() => tryCall("open_folder")}>Abrir pasta</button><span class="grow"></span>
-      <button class="btn ghost sm danger" @click=${() => remove([t.base])}>Remover</button>
+      <button class="btn quiet sm" @click=${() => tryCall("open_folder")}>${tr("ui.lib.open_dir")}</button><span class="grow"></span>
+      <button class="btn ghost sm danger" @click=${() => remove([t.base])}>${tr("ui.common.remove")}</button>
     </div>
   </aside>`;
 }
@@ -178,33 +181,33 @@ export const library = {
     return false;
   },
   render(st) {
-    if (!st.app?.library) return html`<div class="page">${pageHead("Biblioteca", "")}${noLibrary()}</div>`;
+    if (!st.app?.library) return html`<div class="page">${pageHead(tr("ui.nav.library"), "")}${noLibrary()}</div>`;
     const s = v(), list = visibleTracks(st.tracks);
     const first = Math.max(0, Math.floor(s.scroll / ROW) - 6), last = Math.min(list.length, Math.ceil((s.scroll + s.vh) / ROW) + 6);
     const sel = s.selected ? track(s.selected) : null;
     return html`<div class="page lib">
-      ${pageHead("Biblioteca", `${plural(st.tracks?.length || 0, "faixa", "faixas")} em ${st.app.library.title}`,
-        html`<button class="btn ghost" @click=${() => tryCall("open_folder")}>${icon("folder")} Abrir pasta</button>`)}
+      ${pageHead(tr("ui.nav.library"), tr("ui.lib.count_in", { count: st.tracks?.length || 0, title: st.app.library.title }),
+        html`<button class="btn ghost" @click=${() => tryCall("open_folder")}>${icon("folder")} ${tr("ui.lib.open_dir")}</button>`)}
       <div class="ltools rise" style="--i:1">
-        <input class="field" data-filter placeholder="Filtrar…  (F)" .value=${s.q} @input=${e => setView("library", { q: e.target.value, scroll: 0 })}>
-        <div class="seg">${FILTERS.map(([k, label]) => html`<button aria-pressed=${s.filter === k}
-          @click=${() => setView("library", { filter: k, scroll: 0 })}>${label}</button>`)}</div>
-        <div class="seg">${SORTS.map(([k, label]) => html`<button aria-pressed=${s.sort === k}
-          @click=${() => setView("library", { sort: k })}>${label}</button>`)}</div>
+        <input class="field" data-filter placeholder=${tr("ui.lib.filter")} .value=${s.q} @input=${e => setView("library", { q: e.target.value, scroll: 0 })}>
+        <div class="seg">${FILTERS.map(([k]) => html`<button aria-pressed=${s.filter === k}
+          @click=${() => setView("library", { filter: k, scroll: 0 })}>${tr("ui.lib.f." + k)}</button>`)}</div>
+        <div class="seg">${SORTS.map(k => html`<button aria-pressed=${s.sort === k}
+          @click=${() => setView("library", { sort: k })}>${tr("ui.lib.sort." + k)}</button>`)}</div>
       </div>
       ${s.checked.length ? html`<div class="bulk rise">
-        <span><b>${s.checked.length}</b> selecionada${s.checked.length > 1 ? "s" : ""}</span>
+        <span>${tt("ui.lib.selected", { count: s.checked.length, n: html`<b>${s.checked.length}</b>` })}</span>
         <button class="btn sm" ?disabled=${!!st.job || !s.checked.some(b => track(b)?.kind === "multiplex_lrc")}
-          @click=${() => makeGuides(s.checked.filter(b => track(b)?.kind === "multiplex_lrc"))}>${icon("guide")} Gerar guia</button>
-        <button class="btn ghost sm danger" @click=${() => remove(s.checked)}>Remover</button>
+          @click=${() => makeGuides(s.checked.filter(b => track(b)?.kind === "multiplex_lrc"))}>${icon("guide")} ${tr("ui.lib.build_guide")}</button>
+        <button class="btn ghost sm danger" @click=${() => remove(s.checked)}>${tr("ui.common.remove")}</button>
         <span class="grow"></span>
-        <button class="btn quiet sm" @click=${() => setView("library", { checked: list.map(t => t.base) })}>Selecionar ${list.length}</button>
-        <button class="btn quiet sm" @click=${() => setView("library", { checked: [] })}>Limpar</button>
+        <button class="btn quiet sm" @click=${() => setView("library", { checked: list.map(t => t.base) })}>${tr("ui.lib.select_n", { count: list.length })}</button>
+        <button class="btn quiet sm" @click=${() => setView("library", { checked: [] })}>${tr("ui.lib.clear")}</button>
       </div>` : ""}
       <div class="lbody ${sel ? "with-drawer" : ""}">
         <div class="tlist" @scroll=${onScroll}>
-          ${list.length === 0 ? html`<div class="empty"><h3>Nada por aqui</h3><p>${st.tracks?.length ? "Nenhuma faixa com esse filtro." : "Sua biblioteca está vazia: adicione ou importe músicas."}</p>
-            ${st.tracks?.length ? "" : html`<div class="row"><a class="btn" href="#/add">Adicionar</a><a class="btn ghost" href="#/import">Importar</a></div>`}</div>`
+          ${list.length === 0 ? html`<div class="empty"><h3>${tr("ui.lib.empty_title")}</h3><p>${tr(st.tracks?.length ? "ui.lib.empty_filter" : "ui.lib.empty_lib")}</p>
+            ${st.tracks?.length ? "" : html`<div class="row"><a class="btn" href="#/add">${tr("ui.nav.add")}</a><a class="btn ghost" href="#/import">${tr("ui.nav.import")}</a></div>`}</div>`
           : html`<div class="tspace" style="height:${list.length * ROW}px">${list.slice(first, last).map((t, k) => row(t, first + k, s))}</div>`}
         </div>
         ${drawer(sel)}

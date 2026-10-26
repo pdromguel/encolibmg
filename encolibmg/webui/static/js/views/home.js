@@ -3,7 +3,8 @@ import { html } from "../../vendor/lit-html.js";
 import { go } from "../app.js";
 import { typePlaceholder } from "../fx/overlay.js";
 import { setView } from "../store.js";
-import { noLibrary } from "./common.js";
+import { t, tt } from "../i18n.js";
+import { badgeText, noLibrary } from "./common.js";
 
 const EXAMPLES = ["Queen - Bohemian Rhapsody", "Adele - Someone Like You", "Elis Regina - Águas de Março",
                   "RADWIMPS - Sparkle", "Tim Maia - Gostava Tanto de Você", "Journey - Don't Stop Believin'"];
@@ -39,38 +40,38 @@ export const home = {
       <pixel-field></pixel-field>
       <div class="hero-inner">
         <pixel-wordmark class="hero-word"></pixel-wordmark>
-        <p class="hero-tag rise" style="--i:8">Sua biblioteca de karaokê, afinada.</p>
+        <p class="hero-tag rise" style="--i:8">${t("ui.home.tag")}</p>
         ${lib ? html`
           <form class="hero-search rise brackets" style="--i:10" @submit=${submit}>
             <span class="prompt">›</span>
-            <input name="q" data-search autocomplete="off" spellcheck="false" aria-label="Buscar música"
+            <input name="q" data-search autocomplete="off" spellcheck="false" aria-label=${t("ui.home.search_aria")}
                    @focus=${e => e.target.closest("form").classList.add("on")}
                    @blur=${e => e.target.closest("form").classList.remove("on")}>
             <kbd>Enter</kbd>
           </form>
-          <p class="hero-hint rise" style="--i:12">Busca a letra sincronizada, baixa o áudio, separa a voz e gera o guia. <kbd>/</kbd> em qualquer tela.</p>`
-        : html`<div class="rise" style="--i:10">${noLibrary("Abra ou crie uma biblioteca para começar a montar seu karaokê.")}</div>`}
+          <p class="hero-hint rise" style="--i:12">${tt("ui.home.hint", { key: html`<kbd>/</kbd>` })}</p>`
+        : html`<div class="rise" style="--i:10">${noLibrary(t("ui.home.nolib"))}</div>`}
       </div>
     </section>
     ${lib ? html`
     <section class="page home-below">
       <div class="stats">
-        ${stat(st.tracks ?? "–", "faixas", "#/library")}
-        ${stat(st.multiplex ?? "–", "com voz-guia (Multiplex)", "#/library")}
-        ${stat(st.guides ?? "–", "com guia MIDI", "#/library")}
-        ${stat(st.mtv ?? "–", "vídeos de karaokê", "#/library")}
-        ${stat(pending, pending === 1 ? "pendência" : "pendências", "#/check", pending ? "warn" : "ok")}
+        ${stat(st.tracks ?? "–", t("ui.home.stat.tracks", { count: st.tracks }), "#/library")}
+        ${stat(st.multiplex ?? "–", t("ui.home.stat.multiplex"), "#/library")}
+        ${stat(st.guides ?? "–", t("ui.home.stat.guides"), "#/library")}
+        ${stat(st.mtv ?? "–", t("ui.home.stat.mtv"), "#/library")}
+        ${stat(pending, t("ui.home.stat.pending", { count: pending }), "#/check", pending ? "warn" : "ok")}
       </div>
       ${recent.length ? html`
-        <h3 class="rise" style="margin:34px 0 12px">Adicionadas recentemente</h3>
+        <h3 class="rise" style="margin:34px 0 12px">${t("ui.home.recent")}</h3>
         <div class="recent">
           ${recent.map((t, i) => html`<a class="rcard rise" style="--i:${i}" href="#/library"
               @click=${() => setView("library", { selected: t.base })}>
             <pixel-identicon name=${t.base}></pixel-identicon>
             <span class="t ellipsis">${t.title}</span><span class="a ellipsis">${t.artist}</span>
-            <span class="badges">${t.badges.slice(0, 3).map(b => html`<span class="badge">${b}</span>`)}</span>
+            <span class="badges">${t.badges.slice(0, 3).map(b => html`<span class="badge">${badgeText(b)}</span>`)}</span>
           </a>`)}
-        </div>` : html`<p class="muted rise" style="margin-top:28px">Sua biblioteca ainda está vazia. Busque uma música acima para começar.</p>`}
+        </div>` : html`<p class="muted rise" style="margin-top:28px">${t("ui.home.empty")}</p>`}
     </section>` : ""}`;
   },
 };

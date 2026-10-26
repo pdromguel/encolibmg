@@ -10,6 +10,7 @@ import { set, state, subscribe } from "./store.js";
 import { closeMenu, menu, modal, modalOpen, promptDialog } from "./ui/overlay.js";
 import { toast } from "./ui/toast.js";
 import { screens, NAV } from "./views/index.js";
+import { setCatalog, t, tt } from "./i18n.js";
 
 const root = document.getElementById("app");
 
@@ -52,23 +53,23 @@ export async function chooseLibrary() {
   if (!picked) return;
   if (picked.has_manifest) {
     const app = await tryCall("library_open", picked.path);
-    if (app) { set({ app, view: {} }); await refresh(); toast(`Biblioteca “${app.library.title}” aberta.`, { kind: "ok" }); }
+    if (app) { set({ app, view: {} }); await refresh(); toast(t("ui.lib.opened", { title: app.library.title }), { kind: "ok" }); }
     return;
   }
-  const res = await promptDialog("Criar biblioteca", [{ name: "title", label: "Nome (aparece no Encore)",
-    value: "Minha Biblioteca" }], { lead: `Vou criar a pasta EncoreLibrary dentro de ${picked.path}, com o manifest.json que o Encore procura.`, ok: "Criar" });
+  const res = await promptDialog(t("ui.lib.create_title"), [{ name: "title", label: t("ui.lib.name_label"),
+    value: t("name.default_library") }], { lead: t("ui.lib.create_lead", { path: picked.path }), ok: t("ui.common.create") });
   if (!res) return;
   const app = await tryCall("library_create", picked.path, res.title);
-  if (app) { set({ app, view: {} }); await refresh(); toast(`Pronto: “${app.library.title}” criada.`, { kind: "ok", detail: app.library.path }); }
+  if (app) { set({ app, view: {} }); await refresh(); toast(t("ui.lib.created", { title: app.library.title }), { kind: "ok", detail: app.library.path }); }
 }
 
 function libraryMenu(e) {
   const lib = state.app?.library;
   menu(e.currentTarget, [
-    ...(lib ? [{ section: lib.path }, { label: "Abrir pasta no Explorer", run: () => tryCall("open_folder") },
-               { label: "Configurar biblioteca…", run: openSettings }] : []),
-    { section: "Biblioteca" },
-    { label: "Abrir ou criar outra…", kbd: "Ctrl O", run: chooseLibrary },
+    ...(lib ? [{ section: lib.path }, { label: t("ui.lib.open_folder"), run: () => tryCall("open_folder") },
+               { label: t("ui.lib.settings_menu"), run: openSettings }] : []),
+    { section: t("ui.nav.library") },
+    { label: t("ui.lib.open_other"), kbd: "Ctrl O", run: chooseLibrary },
   ]);
 }
 
@@ -77,39 +78,60 @@ export async function openSettings() {
   const s = await tryCall("settings_get");
   if (!s) return;
   const res = await modal(close => html`
-    <h2>Configurar biblioteca</h2>
-    <p class="lead">Como a biblioteca aparece no Encore. Reabra a biblioteca no Encore (F2) para aplicar.</p>
+    <h2>${t("ui.settings.title")}</h2>
+    <p class="lead">${t("ui.settings.lead")}</p>
     <div class="col" style="gap:14px">
-      <div><label class="lbl">Nome</label><input class="field" .value=${s.title} @input=${e => s.title = e.target.value}></div>
-      <div><label class="lbl">Descrição</label><textarea class="field" rows="3" .value=${s.description}
+      <div><label class="lbl">${t("ui.settings.name")}</label><input class="field" .value=${s.title} @input=${e => s.title = e.target.value}></div>
+      <div><label class="lbl">${t("ui.settings.description")}</label><textarea class="field" rows="3" .value=${s.description}
            @input=${e => s.description = e.target.value}></textarea></div>
       <div class="col" style="gap:8px">
-        <span class="lbl" style="margin:0">Opções do Encore</span>
+        <span class="lbl" style="margin:0">${t("ui.settings.options")}</span>
         ${s.flags.map(f => html`<label class="check"><input type="checkbox" .checked=${f.value}
           @change=${e => f.value = e.target.checked}>${f.label}</label>`)}
       </div>
     </div>
-    <div class="foot"><button class="btn ghost" @click=${() => close()}>Cancelar</button>
-      <button class="btn" @click=${() => close(s)}>Salvar</button></div>`);
+    <div class="foot"><button class="btn ghost" @click=${() => close()}>${t("ui.common.cancel")}</button>
+      <button class="btn" @click=${() => close(s)}>${t("ui.common.save")}</button></div>`);
   if (!res) return;
   const app = await tryCall("settings_save", res);
-  if (app) { set({ app }); toast("Configuração salva.", { kind: "ok", detail: "Reabra a biblioteca no Encore para aplicar." }); }
+  if (app) { set({ app }); toast(t("ui.settings.saved"), { kind: "ok", detail: t("ui.settings.saved_detail") }); }
+}
+
+/* ---------------------------------------------------------------- language --- */
+const LANGS = [["auto", null], ["pt-BR", "Português (Brasil)"], ["en", "English"]];
+
+export async function setLanguage(setting) {
+  const res = await tryCall("set_language", setting);
+  if (!res) return;
+  setCatalog(res.catalog, res.lang);
+  set({ lang: { lang: res.lang, setting: res.setting } });
+  await refresh();  // labels that come translated from Python (kinds, issues, stats)
+  screens[state.route.name]?.relang?.();
+  toast(t("ui.lang.changed"), { kind: "ok" });
+}
+
+function languageMenu(e) {
+  const cur = state.lang?.setting || "auto";
+  menu(e.currentTarget, [
+    { section: t("ui.lang.title") },
+    ...LANGS.map(([v, name]) => ({ label: (cur === v ? "✓ " : " ") + (name || t("ui.lang.auto")), run: () => setLanguage(v) })),
+  ]);
 }
 
 /* ---------------------------------------------------------------- help --- */
 export function openHelp() {
   const k = (...keys) => html`<span class="k">${keys.map(x => html`<kbd>${x}</kbd>`)}</span>`;
   modal(() => html`
-    <h2>Atalhos</h2>
-    <p class="lead">Tudo no EncoLibMG funciona pelo teclado também.</p>
+    <h2>${t("ui.help.title")}</h2>
+    <p class="lead">${t("ui.help.lead")}</p>
     <div class="keys">
-      ${k("/")}<span>Buscar uma música</span>
-      ${k("1", "–", "6")}<span>Trocar de tela (Início, Adicionar, Biblioteca, Verificar, Importar, Visual)</span>
-      ${k("Espaço")}<span>Tocar / pausar · na Sincronia: marcar âncora</span>
-      ${k("←", "→")}<span>Voltar / avançar 5 s no player</span>
-      ${k("Esc")}<span>Fechar janela, painel ou voltar</span>
-      ${k("Ctrl", "O")}<span>Abrir ou criar biblioteca</span>
-      ${k("?")}<span>Esta ajuda</span>
+      ${k("/")}<span>${t("ui.help.search")}</span>
+      ${k("1", "–", "6")}<span>${t("ui.help.screens")}</span>
+      ${k(t("ui.help.space_key"))}<span>${t("ui.help.play")}</span>
+      ${k("←", "→")}<span>${t("ui.help.seek")}</span>
+      ${k("Esc")}<span>${t("ui.help.esc")}</span>
+      ${k("Ctrl", "O")}<span>${t("ui.help.open")}</span>
+      ${k("?")}<span>${t("ui.help.help")}</span>
     </div>`);
 }
 
@@ -120,20 +142,21 @@ function header(s) {
   const lib = s.app?.library;
   return html`
   <header class="hdr">
-    <a class="brand" href="#/home" aria-label="EncoLibMG — início">
+    <a class="brand" href="#/home" aria-label=${t("ui.nav.home_aria")}>
       <pixel-mark ?singing=${!!s.job}></pixel-mark>
       <span class="name">EncoLib<b>MG</b></span>
     </a>
     <nav class="nav">
       ${NAV.map((n, i) => html`<a href="#/${n.name}" class=${s.route.name === n.name || screens[s.route.name]?.parent === n.name ? "on" : ""}>
-        <span class="n">${i + 1}</span>${n.label}</a>`)}
+        <span class="n">${i + 1}</span>${t(n.label)}</a>`)}
     </nav>
     <div class="right">
       <div class="libchip ${lib ? "" : "none"}" @click=${libraryMenu} title=${lib?.path || ""}>
-        <span class="dot"></span><span class="ellipsis">${lib ? lib.title : "Nenhuma biblioteca"}</span><span class="muted">▾</span>
+        <span class="dot"></span><span class="ellipsis">${lib ? lib.title : t("ui.lib.none")}</span><span class="muted">▾</span>
       </div>
-      <button class="btn quiet icon" data-tip="Configurar" aria-label="Configurar" @click=${openSettings} ?disabled=${!lib}>${icon("gear")}</button>
-      <button class="btn quiet icon" data-tip="Atalhos  ?" aria-label="Atalhos" @click=${openHelp}>?</button>
+      <button class="btn quiet sm langchip" data-tip=${t("ui.lang.title")} aria-label=${t("ui.lang.title")} @click=${languageMenu}>${(s.lang?.lang || "en").slice(0, 2).toUpperCase()}</button>
+      <button class="btn quiet icon" data-tip=${t("ui.common.settings")} aria-label=${t("ui.common.settings")} @click=${openSettings} ?disabled=${!lib}>${icon("gear")}</button>
+      <button class="btn quiet icon" data-tip=${t("ui.help.title") + "  ?"} aria-label=${t("ui.help.title")} @click=${openHelp}>?</button>
     </div>
   </header>`;
 }
@@ -146,20 +169,20 @@ function dock(s) {
         <pixel-progress value=${j.frac == null ? -1 : j.frac}></pixel-progress>
         <span class="step">${j.step || j.label}</span>
         <span class="pct">${pct(j.frac)}</span>
-        <button class="btn ghost sm" @click=${() => tryCall("job_cancel")}>Cancelar</button>
+        <button class="btn ghost sm" @click=${() => tryCall("job_cancel")}>${t("ui.common.cancel")}</button>
       </div>`
       : html`<div class="job idle"><pixel-progress value=""></pixel-progress>
-        <span class="step">${s.lastJob || "Pronto."}</span></div>`}
+        <span class="step">${s.lastJob || t("ui.dock.ready")}</span></div>`}
     ${p ? html`<div class="player">
         <pixel-identicon name=${p.base}></pixel-identicon>
         <span class="t ellipsis">${p.title}</span>
         <pixel-eq ?playing=${p.playing}></pixel-eq>
         <span class="time">${fmtTime(p.time)} / ${fmtTime(p.duration)}</span>
-        ${p.multiplexed ? html`<div class="seg">${[["both", "Ambos"], ["left", "Instr."], ["right", "Voz"]].map(([v, l]) =>
-          html`<button aria-pressed=${p.channel === v} @click=${() => player.setChannel(v)}>${l}</button>`)}</div>` : ""}
-        <button class="btn quiet sm icon" aria-label=${p.playing ? "Pausar" : "Tocar"} @click=${() => player.toggle()}>${icon(p.playing ? "pause" : "play")}</button>
-        <button class="btn quiet sm icon" aria-label="Fechar player" @click=${() => player.stop()}>${icon("close")}</button>
-      </div>` : html`<span class="muted small">Pressione <kbd>?</kbd> para ver os atalhos</span>`}
+        ${p.multiplexed ? html`<div class="seg">${[["both", "ui.player.both"], ["left", "ui.player.instr"], ["right", "ui.player.voice"]].map(([v, l]) =>
+          html`<button aria-pressed=${p.channel === v} @click=${() => player.setChannel(v)}>${t(l)}</button>`)}</div>` : ""}
+        <button class="btn quiet sm icon" aria-label=${t(p.playing ? "ui.player.pause" : "ui.player.play")} @click=${() => player.toggle()}>${icon(p.playing ? "pause" : "play")}</button>
+        <button class="btn quiet sm icon" aria-label=${t("ui.player.close")} @click=${() => player.stop()}>${icon("close")}</button>
+      </div>` : html`<span class="muted small">${tt("ui.dock.press", { key: html`<kbd>?</kbd>` })}</span>`}
   </footer>`;
 }
 
@@ -172,13 +195,13 @@ subscribe(s => render(shell(s), root));
 
 /* ---------------------------------------------------------------- events --- */
 on("job", ev => {
-  if (ev.type === "start") set({ job: { id: ev.id, label: ev.label, step: ev.step, frac: ev.frac, kind: ev.kind } });
-  else if (ev.type === "progress") { if (state.job) set({ job: { ...state.job, step: ev.step, frac: ev.frac } }); }
+  if (ev.type === "start") set({ job: { id: ev.id, label: ev.label, step: ev.step, key: ev.key, frac: ev.frac, kind: ev.kind } });
+  else if (ev.type === "progress") { if (state.job) set({ job: { ...state.job, step: ev.step, key: ev.key, frac: ev.frac } }); }
   else {
     const label = state.job?.label || ev.label || "";
-    set({ job: null, lastJob: ev.type === "done" ? `✓ ${label}` : ev.type === "cancelled" ? `Cancelado: ${label}` : `Falhou: ${label}` });
+    set({ job: null, lastJob: ev.type === "done" ? `✓ ${label}` : ev.type === "cancelled" ? t("ui.job.cancelled_label", { label }) : t("ui.job.failed_label", { label }) });
     if (ev.type === "error") toast(ev.error, { kind: "bad", detail: label });
-    if (ev.type === "cancelled") toast("Cancelado.", { kind: "info", detail: label });
+    if (ev.type === "cancelled") toast(t("ui.job.cancelled"), { kind: "info", detail: label });
   }
 });
 on("library", () => refresh());
@@ -201,6 +224,9 @@ addEventListener("keydown", e => {
 
 /* ---------------------------------------------------------------- boot --- */
 (async () => {
+  const lang = await call("i18n");
+  setCatalog(lang.catalog, lang.lang);
+  set({ lang: { lang: lang.lang, setting: lang.setting } });
   await loadBrand();
   await document.fonts.ready;
   set({ route: parseHash() });
@@ -212,9 +238,9 @@ addEventListener("keydown", e => {
   setTimeout(() => boot.remove(), 500);
 })().catch(e => {
   console.error(e);
-  toast("Não consegui iniciar a interface.", { kind: "bad", detail: String(e.message || e) });
+  toast(t("ui.boot.failed"), { kind: "bad", detail: String(e.message || e) });
 });
 
 // dev/test hook (used by scripts/snap_app.py to drive screens)
 import * as storeModule from "./store.js";
-window.__encolib = { store: storeModule, go, refresh, player };
+window.__encolib = { store: storeModule, go, refresh, player, setLanguage };

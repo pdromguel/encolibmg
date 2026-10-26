@@ -15,6 +15,7 @@ from encolibmg.audio import loudness
 from encolibmg.audio.convert import (UNSUPPORTED_AUDIO, UNSUPPORTED_VIDEO, convert_audio,
                                       convert_video, duration)
 from encolibmg.errors import Cancelled
+from encolibmg.i18n import t as tr
 from encolibmg.library import (AUDIO_EXTS, LYRIC_EXTS, MIDI_EXTS, VIDEO_EXTS, Library, Track,
                                 _split_base, _strip_ext)
 from encolibmg.lyrics.match import find_synced, read_lrc
@@ -26,20 +27,8 @@ from encolibmg.tags import write_tags
 
 MEDIA_EXTS = AUDIO_EXTS | VIDEO_EXTS | MIDI_EXTS | LYRIC_EXTS | UNSUPPORTED_AUDIO | UNSUPPORTED_VIDEO
 
-KIND_LABEL = {
-    "orphan": "Áudio sem letra",
-    "bad_lrc": "Letra fora do padrão",
-    "unsupported": "Formato não aceito",
-    "subfolder": "Em subpasta",
-    "temp_leftover": "Pasta temporária",
-    "missing_tags": "Sem tags",
-    "loudness": "Volume",
-    "bad_name": "Nome fora do padrão",
-    "duplicate": "Possível duplicata",
-    "no_guide": "Sem guia MIDI",
-    "midi_no_lyrics": "MIDI sem letra",
-    "manifest_incomplete": "Manifest incompleto",
-}
+def kind_label(kind: str) -> str:
+    return tr(f"issue.kind.{kind}")
 
 
 # folders the app (and Encore's manifest) use for library assets, not songs
@@ -89,8 +78,7 @@ def check(lib: Library, include_loudness: bool = False, cancel: Event | None = N
 
     try:
         if ensure_additional(read_manifest(root)):
-            issues.append(Issue("manifest_incomplete", root / "manifest.json", "Sem 'additionalContents': o Encore "
-                                "não cria a categoria MTV nem lê vídeos de fundo desta biblioteca.", True))
+            issues.append(Issue("manifest_incomplete", root / "manifest.json", tr("issue.msg.manifest_incomplete"), True))
     except (OSError, ValueError):
         pass
 
@@ -98,52 +86,50 @@ def check(lib: Library, include_loudness: bool = False, cancel: Event | None = N
     for entry in sorted(root.iterdir()):
         if entry.is_dir():
             if entry.name.startswith(".encore-tmp-"):
-                issues.append(Issue("temp_leftover", entry, "Sobra de um download interrompido.", True))
+                issues.append(Issue("temp_leftover", entry, tr("issue.msg.temp_leftover"), True))
                 continue
             if entry.name.lower() in ASSET_DIRS:
                 continue  # BGVs, bumpers, boot video, narrations and SoundFonts live in subfolders on purpose
             for f in sorted(entry.rglob("*")):
                 if f.is_file() and f.suffix.lower() in MEDIA_EXTS and f.resolve() not in referenced:
                     free = not (root / f.name).exists()
-                    issues.append(Issue("subfolder", f, f"O Encore só lê a raiz: {f.relative_to(root)}"
-                                        + ("" if free else " (já existe um arquivo com esse nome na raiz)"),
+                    issues.append(Issue("subfolder", f, tr("issue.msg.subfolder" if free else "issue.msg.subfolder_taken",
+                                           path=f.relative_to(root).as_posix()),
                                         free))
         elif entry.suffix.lower() in UNSUPPORTED_AUDIO | UNSUPPORTED_VIDEO:
             target = entry.with_suffix(".mp3" if entry.suffix.lower() in UNSUPPORTED_AUDIO else ".mp4")
-            issues.append(Issue("unsupported", entry, f"O Encore não lê {entry.suffix}; converter para "
-                                f"{target.suffix}.", not target.exists()))
+            issues.append(Issue("unsupported", entry, tr("issue.msg.unsupported", ext=entry.suffix, target=target.suffix), not target.exists()))
 
     tracks = lib.scan()
     groups: dict[str, list[Track]] = defaultdict(list)
     for t in tracks:
         groups[_dup_key(t)].append(t)
         if t.kind == "orphan":
-            issues.append(Issue("orphan", t.files[0], "Áudio sem letra: o Encore não mostra esta faixa.",
+            issues.append(Issue("orphan", t.files[0], tr("issue.msg.orphan"),
                                 " - " in t.base, t))
         if " - " not in t.base:
-            issues.append(Issue("bad_name", t.files[0], "Nome sem 'Artista - Título'. Use Editar.", False, t))
+            issues.append(Issue("bad_name", t.files[0], tr("issue.msg.bad_name"), False, t))
         if t.kind == "midi":
             midi = t.file_with(MIDI_EXTS)
             if midi and not midi_has_lyrics(midi):
-                issues.append(Issue("midi_no_lyrics", midi, "O Encore toca, mas sem letra na tela.", False, t))
+                issues.append(Issue("midi_no_lyrics", midi, tr("issue.msg.midi_no_lyrics"), False, t))
         if t.kind == "multiplex_lrc" and not t.has_guide:
-            issues.append(Issue("no_guide", t.files[0], "Sem guia MIDI: o Encore estima as notas ao vivo "
-                                "(guia e pontuação piores). Gerar leva ~30 s.", True, t))
+            issues.append(Issue("no_guide", t.files[0], tr("issue.msg.no_guide"), True, t))
         for f in t.files:
             ext = f.suffix.lower()
             if ext == ".lrc":
                 # CRLF and BOM are harmless: Encore trims each line and finds the stamp anywhere
                 text = read_lrc(f).replace("\r\n", "\n")
                 if normalize_lrc(text) != text:
-                    issues.append(Issue("bad_lrc", f, "Letra em formato que o Encore lê errado.", True, t))
+                    issues.append(Issue("bad_lrc", f, tr("issue.msg.bad_lrc"), True, t))
             elif ext == ".mp3" and not _has_tags(f) and " - " in t.base:
-                issues.append(Issue("missing_tags", f, "mp3 sem artista/título nas tags.", True, t))
+                issues.append(Issue("missing_tags", f, tr("issue.msg.missing_tags"), True, t))
 
     for same in groups.values():
         if len(same) > 1:
             names = ", ".join(t.base for t in same)
             for t in same:
-                issues.append(Issue("duplicate", t.files[0], f"Parecidas: {names}", False, t))
+                issues.append(Issue("duplicate", t.files[0], tr("issue.msg.duplicate", names=names), False, t))
 
     if include_loudness:
         files = [f for t in tracks for f in t.files if f.suffix.lower() in AUDIO_EXTS | VIDEO_EXTS]
@@ -151,12 +137,12 @@ def check(lib: Library, include_loudness: bool = False, cancel: Event | None = N
             if cancel is not None and cancel.is_set():
                 raise Cancelled()
             if on_progress:
-                on_progress("medindo volume", n / max(1, len(files)))
+                on_progress("step.measure_loudness", n / max(1, len(files)))
             if loudness.is_marked(f) or not loudness.has_audio(f):
                 continue
             l = loudness.measure(f)
             if loudness.needs_fix(l):
-                issues.append(Issue("loudness", f, f"{l.i:.1f} LUFS (alvo {loudness.TARGET:g}).", True,
+                issues.append(Issue("loudness", f, tr("issue.msg.loudness", lufs=f"{l.i:.1f}", target=f"{loudness.TARGET:g}"), True,
                                     extra={"lufs": l.i}))
     return issues
 
@@ -165,61 +151,61 @@ def fix(lib: Library, issue: Issue, search=None) -> str:
     """Applies the automatic fix; returns a short result message (raises on failure)."""
     p = issue.path
     if not issue.fixable:
-        raise ValueError("Este problema não tem correção automática.")
+        raise ValueError(tr("err.no_autofix"))
 
     if issue.kind == "manifest_incomplete":
         data = read_manifest(lib.path)
         ensure_additional(data)
         write_manifest(lib.path, data)
-        return "manifest completado"
+        return tr("fix.manifest")
 
     if issue.kind == "temp_leftover":
         shutil.rmtree(p)
-        return "apagada"
+        return tr("fix.deleted")
 
     if issue.kind == "subfolder":
         target = lib.path / p.name
         if target.exists():
-            raise FileExistsError(f"{p.name} já existe na raiz.")
+            raise FileExistsError(tr("err.exists_in_root", name=p.name))
         shutil.move(str(p), str(target))
-        return "movido para a raiz"
+        return tr("fix.moved")
 
     if issue.kind == "unsupported":
         is_audio = p.suffix.lower() in UNSUPPORTED_AUDIO
         target = p.with_suffix(".mp3" if is_audio else ".mp4")
         if target.exists():
-            raise FileExistsError(f"{target.name} já existe.")
+            raise FileExistsError(tr("err.exists", name=target.name))
         (convert_audio if is_audio else convert_video)(p, target)
         send2trash(str(p))
-        return f"convertido para {target.suffix}"
+        return tr("fix.converted", ext=target.suffix)
 
     if issue.kind == "bad_lrc":
         backup_file(p)
         p.write_text(normalize_lrc(read_lrc(p)), encoding="utf-8", newline="\n")
-        return "letra normalizada"
+        return tr("fix.lrc")
 
     if issue.kind == "missing_tags":
         artist, title = _split_base(_strip_ext(p.name))
         write_tags(p, artist, title)
-        return "tags gravadas"
+        return tr("fix.tags")
 
     if issue.kind == "loudness":
         loudness.normalize_file(p)
-        return "volume ajustado"
+        return tr("fix.loudness")
 
     if issue.kind == "no_guide":
         from encolibmg.guide.build import build_guide
 
         _, stats = build_guide(lib, issue.track)
-        return f"guia gerado ({stats['aligned']} linhas alinhadas, {stats['fallback']} estimadas)"
+        return tr("fix.guide", aligned=stats["aligned"], fallback=stats["fallback"])
 
     if issue.kind == "orphan":
         artist, title = _split_base(issue.track.base)
         cand = find_synced(artist, title, duration(p), search=search)
         if cand is None:
-            raise LookupError("nenhuma letra sincronizada com a mesma duração")
+            raise LookupError(tr("err.no_lyrics_match"))
         lrc = p.with_name(issue.track.base + ".lrc")
         lrc.write_text(normalize_lrc(cand.synced), encoding="utf-8", newline="\n")
-        return f"letra encontrada ({cand.artist} - {cand.title})"
+        return tr("fix.lyrics_found", artist=cand.artist, title=cand.title)
 
-    raise ValueError(f"Correção desconhecida: {issue.kind}")
+    raise ValueError(tr("err.unknown_fix", kind=issue.kind))

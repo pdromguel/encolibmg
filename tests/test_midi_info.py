@@ -1,7 +1,6 @@
 import json
 
 import mido
-import pytest
 
 from encolibmg import checker
 from encolibmg.importer import infer_name

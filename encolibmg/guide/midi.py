@@ -18,6 +18,7 @@ import mido
 from encolibmg.guide.align import Word
 from encolibmg.guide.melody import Note
 from encolibmg.guide.romanize import furigana, script_of
+from encolibmg.i18n import t
 
 PPQ = 480
 TEMPO = 500_000           # µs per beat = 120 BPM
@@ -50,8 +51,7 @@ def _lyric_text(word: str, line_start: bool, first_line: bool) -> str:
 def write_guide(path: Path, notes: list[Note], lines: list[list[Word]], title: str, artist: str) -> Path:
     n_words = sum(len(l) for l in lines)
     if n_words < MIN_LYRIC_EVENTS:
-        raise ValueError(f"A letra tem só {n_words} palavras; o Encore precisa de pelo menos "
-                         f"{MIN_LYRIC_EVENTS} para usar o guia.")
+        raise ValueError(t("err.guide_few_words", count=n_words, min=MIN_LYRIC_EVENTS))
 
     events: list[tuple[int, int, mido.Message | mido.MetaMessage]] = []  # (tick, order, msg)
     for n in notes:

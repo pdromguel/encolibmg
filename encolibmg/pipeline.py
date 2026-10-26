@@ -28,6 +28,7 @@ from encolibmg.lyrics.lrclib import LyricsCandidate
 from encolibmg.lyrics.match import read_lrc
 from encolibmg.lyrics.normalize import normalize_lrc
 from encolibmg.tags import write_tags
+from encolibmg.i18n import t
 
 log = logging.getLogger(__name__)
 Progress = Callable[[str, "float | None"], None]
@@ -63,7 +64,7 @@ def find_audio(artist: str, title: str, duration: float) -> youtube.VideoCandida
         if pick:
             return pick
     raise NoAudioMatch(
-        f"Nenhum áudio no YouTube com duração próxima de {int(duration // 60)}:{int(duration % 60):02d}."
+        t("err.no_audio_match", duration=f"{int(duration // 60)}:{int(duration % 60):02d}")
     )
 
 
@@ -90,22 +91,22 @@ def add_song(lib: Library, lyr: LyricsCandidate, on_progress: Progress = _noop,
     """Multiplex MP3 (L instrumental / R vocals) + normalized LRC."""
     base = base_name(lyr.artist, lyr.title)
     if lib.exists(base):
-        raise AlreadyExists(f"'{base}' já está na biblioteca.")
+        raise AlreadyExists(t("err.already_exists", base=base))
     if not lyr.synced:
-        raise ValueError("Esta letra não é sincronizada.")
+        raise ValueError(t("err.not_synced"))
     lrc_text = normalize_lrc(lyr.synced)
 
-    on_progress("buscando áudio", None)
+    on_progress("step.search_audio", None)
     video = find_audio(lyr.artist, lyr.title, lyr.duration)
     log.info("audio for %s: %s (%s)", base, video.url, video.duration)
     _check(cancel)
 
     with _workdir(lib) as tmp:
-        on_progress("baixando", 0.0)
-        wav = youtube.download_audio(video.url, tmp, cancel, lambda f: on_progress("baixando", f))
+        on_progress("step.download", 0.0)
+        wav = youtube.download_audio(video.url, tmp, cancel, lambda f: on_progress("step.download", f))
         _check(cancel)
         files = _build_multiplex(tmp, wav, base, lyr.artist, lyr.title, lrc_text, on_progress, cancel)
-        on_progress("salvando", None)
+        on_progress("step.save", None)
         track = _finish(lib, files, base)
     return _with_guide(lib, track, make_guide, on_progress, cancel)
 
@@ -113,10 +114,10 @@ def add_song(lib: Library, lyr: LyricsCandidate, on_progress: Progress = _noop,
 def _build_multiplex(tmp: Path, wav: Path, base: str, artist: str, title: str, lrc_text: str,
                      on_progress: Progress, cancel: Event | None) -> list[Path]:
     """Separation → multiplex mp3 (normalized, tagged) + lrc, all inside `tmp`."""
-    on_progress("separando voz", 0.0)
-    inst, voc = separate(wav, tmp / "stems", cancel, lambda f: on_progress("separando voz", f))
+    on_progress("step.separate", 0.0)
+    inst, voc = separate(wav, tmp / "stems", cancel, lambda f: on_progress("step.separate", f))
     _check(cancel)
-    on_progress("mixando", None)
+    on_progress("step.mix", None)
     mp3 = make_multiplex(inst, voc, tmp / f"{base}.multiplexed.mp3")
     write_tags(mp3, artist, title)
     lrc = tmp / f"{base}.lrc"
@@ -131,7 +132,7 @@ def _decode_wav(src: Path, tmp: Path) -> Path:
                            str(wav)], capture_output=True, text=True, encoding="utf-8", errors="replace",
                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if proc.returncode != 0:
-        raise RuntimeError(f"Não consegui ler o áudio de {src.name}:\n{proc.stderr[-800:]}")
+        raise RuntimeError(t("err.read_audio", name=src.name, detail=proc.stderr[-800:]))
     return wav
 
 
@@ -141,12 +142,12 @@ def track_from_local(lib: Library, audio: Path, artist: str, title: str, lrc_tex
     """Multiplex + LRC from a file you already have (keeps your source quality)."""
     base = base_name(artist, title)
     if lib.exists(base):
-        raise AlreadyExists(f"'{base}' já está na biblioteca.")
+        raise AlreadyExists(t("err.already_exists", base=base))
     with _workdir(lib) as tmp:
-        on_progress("lendo áudio", None)
+        on_progress("step.read_audio", None)
         wav = _decode_wav(Path(audio), tmp)
         files = _build_multiplex(tmp, wav, base, artist, title, normalize_lrc(lrc_text), on_progress, cancel)
-        on_progress("salvando", None)
+        on_progress("step.save", None)
         track = _finish(lib, files, base)
     return _with_guide(lib, track, make_guide, on_progress, cancel)
 
@@ -158,13 +159,13 @@ def convert_to_multiplex(lib: Library, track: Track, on_progress: Progress = _no
                   and ".multiplexed." not in f.name.lower()), None)
     lrc = track.file_with({".lrc"})
     if audio is None or lrc is None or track.multiplexed:
-        raise ValueError("Só faixas 'Áudio + LRC' podem ser convertidas.")
+        raise ValueError(t("err.not_audio_lrc"))
     with _workdir(lib) as tmp:
-        on_progress("lendo áudio", None)
+        on_progress("step.read_audio", None)
         wav = _decode_wav(audio, tmp)
         mp3, new_lrc = _build_multiplex(tmp, wav, track.base, track.artist, track.title,
                                         normalize_lrc(read_lrc(lrc)), on_progress, cancel)
-        on_progress("salvando", None)
+        on_progress("step.save", None)
         send2trash(str(audio))
         shutil.move(str(mp3), str(lib.path / mp3.name))
     track = next(t for t in lib.scan() if t.base.lower() == track.base.lower())
@@ -179,13 +180,13 @@ def add_clip(lib: Library, track: Track, video: youtube.VideoCandidate, on_progr
              cancel: Event | None = None) -> Track:
     """Video-only background for a Multiplex track (Encore plays it muted)."""
     if track.has_video:
-        raise AlreadyExists(f"'{track.base}' já tem vídeo.")
+        raise AlreadyExists(t("err.has_video", base=track.base))
     with _workdir(lib) as tmp:
-        on_progress("baixando clipe", 0.0)
-        src = youtube.download_video(video.url, tmp, cancel, lambda f: on_progress("baixando clipe", f),
+        on_progress("step.download_clip", 0.0)
+        src = youtube.download_video(video.url, tmp, cancel, lambda f: on_progress("step.download_clip", f),
                                      video_only=True)
         _check(cancel)
-        on_progress("salvando", None)
+        on_progress("step.save", None)
         dest = tmp / f"{track.base}{src.suffix.lower()}"
         src.rename(dest)
         return _finish(lib, [dest], track.base)
@@ -195,12 +196,12 @@ def add_mtv(lib: Library, artist: str, title: str, video: youtube.VideoCandidate
             on_progress: Progress = _noop, cancel: Event | None = None) -> Track:
     base = base_name(artist, title)
     if lib.exists(base):
-        raise AlreadyExists(f"'{base}' já está na biblioteca.")
+        raise AlreadyExists(t("err.already_exists", base=base))
     with _workdir(lib) as tmp:
-        on_progress("baixando vídeo", 0.0)
-        src = youtube.download_video(video.url, tmp, cancel, lambda f: on_progress("baixando vídeo", f))
+        on_progress("step.download_video", 0.0)
+        src = youtube.download_video(video.url, tmp, cancel, lambda f: on_progress("step.download_video", f))
         _check(cancel)
-        on_progress("salvando", None)
+        on_progress("step.save", None)
         dest = tmp / f"{base}{src.suffix.lower()}"
         src.rename(dest)
         return _finish(lib, [dest], base)

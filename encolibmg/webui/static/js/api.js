@@ -1,4 +1,5 @@
 // Bridge to Python (window.pywebview.api) + events pushed from Python (window.encolib.emit).
+import { t } from "./i18n.js";
 import { toast } from "./ui/toast.js";
 
 const ready = new Promise(resolve => {
@@ -10,13 +11,13 @@ export class ApiError extends Error {
   constructor(message, kind) { super(message); this.kind = kind; }
 }
 
-/** Calls a Python method; rejects with ApiError (message already in Portuguese). */
+/** Calls a Python method; rejects with ApiError (message already translated by Python). */
 export async function call(name, ...args) {
   await ready;
   const fn = window.pywebview.api[name];
-  if (!fn) throw new ApiError(`Função ${name} indisponível.`, "Missing");
+  if (!fn) throw new ApiError(t("ui.api.missing", { name }), "Missing");
   const res = await fn(...args);
-  if (!res || !res.ok) throw new ApiError(res?.error || "Algo deu errado.", res?.kind || "Error");
+  if (!res || !res.ok) throw new ApiError(res?.error || t("ui.api.failed"), res?.kind || "Error");
   return res.data;
 }
 
@@ -53,7 +54,7 @@ export async function runJob(name, ...args) {
     const off = on("job", ev => {
       if (ev.id !== started.job) return;
       if (ev.type === "done") { off(); resolve(ev.result); }
-      else if (ev.type === "cancelled") { off(); reject(new ApiError("Cancelado.", "Cancelled")); }
+      else if (ev.type === "cancelled") { off(); reject(new ApiError(t("ui.job.cancelled"), "Cancelled")); }
       else if (ev.type === "error") { off(); reject(new ApiError(ev.error, ev.kind)); }
     });
   });
